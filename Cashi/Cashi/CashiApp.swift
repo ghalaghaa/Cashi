@@ -36,16 +36,16 @@ import CloudKit
 
 @main
 struct CashiApp: App {
-    let currentUserIsSignedIn: Bool
+    var currentUserIsSignedIn: Bool  // ✅ Fixed
 
     init() {
         let userIsSignedIn: Bool = ProcessInfo.processInfo.arguments.contains("-UITest_startSignedIn") ? true : false
-        self.currentUserIsSignedIn = userIsSignedIn
+        self.currentUserIsSignedIn = userIsSignedIn  // ✅ Now it works
     }
 
     var body: some Scene {
         WindowGroup {
-            CloudKitUserBootcamp() // ✅ تأكد من أن الاسم صحيح
+            GoalSelectionView() // ✅ Double-check the spelling
         }
     }
 }

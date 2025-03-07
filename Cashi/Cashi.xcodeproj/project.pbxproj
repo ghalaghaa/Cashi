@@ -10,22 +10,9 @@
 		63D576C22D6B4D5B00B450DF /* Cashi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cashi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		63D576E92D6F417000B450DF /* Exceptions for "Cashi" folder in "Cashi" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				CloudKitUserBootcampViewModel.swift,
-			);
-			target = 63D576C12D6B4D5B00B450DF /* Cashi */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		63D576C42D6B4D5B00B450DF /* Cashi */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				63D576E92D6F417000B450DF /* Exceptions for "Cashi" folder in "Cashi" target */,
-			);
 			path = Cashi;
 			sourceTree = "<group>";
 		};
@@ -266,7 +253,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Cashi/Preview Content\"";
-				DEVELOPMENT_TEAM = 8YM7ZLSN5G;
+				DEVELOPMENT_TEAM = 4Q62UAXDW7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -296,7 +283,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Cashi/Preview Content\"";
-				DEVELOPMENT_TEAM = 8YM7ZLSN5G;
+				DEVELOPMENT_TEAM = 4Q62UAXDW7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

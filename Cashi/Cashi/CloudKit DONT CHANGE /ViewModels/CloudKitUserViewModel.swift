@@ -14,7 +14,8 @@ class CloudKitUserViewModel: ObservableObject {
     @Published var error: String = ""
     @Published var userName: String = ""
     @Published var users: [User] = []
-
+    @Published var currentUser: User?
+    
     private let container = CKContainer(identifier: "iCloud.CashiBackup")
     private let database: CKDatabase
 
@@ -117,6 +118,7 @@ class CloudKitUserViewModel: ObservableObject {
 
             DispatchQueue.main.async {
                 self.users = fetchedUsers
+                self.currentUser = fetchedUsers.first
                 print("✅ تم تحديث قائمة المستخدمين! عدد المستخدمين: \(self.users.count)")
             }
 
