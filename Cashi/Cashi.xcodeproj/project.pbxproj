@@ -6,11 +6,62 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		632298012D7BC72B007B6056 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 632298002D7BC72B007B6056 /* WidgetKit.framework */; };
+		632298032D7BC72B007B6056 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 632298022D7BC72B007B6056 /* SwiftUI.framework */; };
+		632298142D7BC72C007B6056 /* CashiWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 632297FE2D7BC72B007B6056 /* CashiWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		632298122D7BC72C007B6056 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63D576BA2D6B4D5B00B450DF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 632297FD2D7BC72B007B6056;
+			remoteInfo = CashiWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		632298192D7BC72C007B6056 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				632298142D7BC72C007B6056 /* CashiWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		632297FE2D7BC72B007B6056 /* CashiWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CashiWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		632298002D7BC72B007B6056 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		632298022D7BC72B007B6056 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		63D576C22D6B4D5B00B450DF /* Cashi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cashi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		632298152D7BC72C007B6056 /* Exceptions for "CashiWidget" folder in "CashiWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 632297FD2D7BC72B007B6056 /* CashiWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		632298042D7BC72B007B6056 /* CashiWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				632298152D7BC72C007B6056 /* Exceptions for "CashiWidget" folder in "CashiWidgetExtension" target */,
+			);
+			path = CashiWidget;
+			sourceTree = "<group>";
+		};
 		63D576C42D6B4D5B00B450DF /* Cashi */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Cashi;
@@ -19,6 +70,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		632297FB2D7BC72B007B6056 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				632298032D7BC72B007B6056 /* SwiftUI.framework in Frameworks */,
+				632298012D7BC72B007B6056 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		63D576BF2D6B4D5B00B450DF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -29,10 +89,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		632297FF2D7BC72B007B6056 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				632298002D7BC72B007B6056 /* WidgetKit.framework */,
+				632298022D7BC72B007B6056 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		63D576B92D6B4D5B00B450DF = {
 			isa = PBXGroup;
 			children = (
 				63D576C42D6B4D5B00B450DF /* Cashi */,
+				632298042D7BC72B007B6056 /* CashiWidget */,
+				632297FF2D7BC72B007B6056 /* Frameworks */,
 				63D576C32D6B4D5B00B450DF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				63D576C22D6B4D5B00B450DF /* Cashi.app */,
+				632297FE2D7BC72B007B6056 /* CashiWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +120,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		632297FD2D7BC72B007B6056 /* CashiWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 632298162D7BC72C007B6056 /* Build configuration list for PBXNativeTarget "CashiWidgetExtension" */;
+			buildPhases = (
+				632297FA2D7BC72B007B6056 /* Sources */,
+				632297FB2D7BC72B007B6056 /* Frameworks */,
+				632297FC2D7BC72B007B6056 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				632298042D7BC72B007B6056 /* CashiWidget */,
+			);
+			name = CashiWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = CashiWidgetExtension;
+			productReference = 632297FE2D7BC72B007B6056 /* CashiWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		63D576C12D6B4D5B00B450DF /* Cashi */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 63D576D02D6B4D5C00B450DF /* Build configuration list for PBXNativeTarget "Cashi" */;
@@ -55,10 +149,12 @@
 				63D576BE2D6B4D5B00B450DF /* Sources */,
 				63D576BF2D6B4D5B00B450DF /* Frameworks */,
 				63D576C02D6B4D5B00B450DF /* Resources */,
+				632298192D7BC72C007B6056 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				632298132D7BC72C007B6056 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				63D576C42D6B4D5B00B450DF /* Cashi */,
@@ -80,6 +176,9 @@
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					632297FD2D7BC72B007B6056 = {
+						CreatedOnToolsVersion = 16.0;
+					};
 					63D576C12D6B4D5B00B450DF = {
 						CreatedOnToolsVersion = 16.0;
 					};
@@ -100,11 +199,19 @@
 			projectRoot = "";
 			targets = (
 				63D576C12D6B4D5B00B450DF /* Cashi */,
+				632297FD2D7BC72B007B6056 /* CashiWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		632297FC2D7BC72B007B6056 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		63D576C02D6B4D5B00B450DF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +222,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		632297FA2D7BC72B007B6056 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		63D576BE2D6B4D5B00B450DF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +238,69 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		632298132D7BC72C007B6056 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 632297FD2D7BC72B007B6056 /* CashiWidgetExtension */;
+			targetProxy = 632298122D7BC72C007B6056 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		632298172D7BC72C007B6056 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4Q62UAXDW7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CashiWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CashiWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Ghala.Cashi.CashiWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		632298182D7BC72C007B6056 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4Q62UAXDW7;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CashiWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CashiWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Ghala.Cashi.CashiWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		63D576CE2D6B4D5C00B450DF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -307,6 +483,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		632298162D7BC72C007B6056 /* Build configuration list for PBXNativeTarget "CashiWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				632298172D7BC72C007B6056 /* Debug */,
+				632298182D7BC72C007B6056 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		63D576BD2D6B4D5B00B450DF /* Build configuration list for PBXProject "Cashi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
