@@ -7,55 +7,7 @@
 
 import SwiftUI
 
-//struct ContentView: View {
-//    var body: some View {
-//        VStack {
-//            Image(systemName: "globe")
-//                .imageScale(.large)
-//                .foregroundStyle(.tint)
-//            Text("Hello, world!")
-//        }
-//        .padding()
-//    }
-//}
 
-
-import SwiftUI
-
-//struct ContentView: View {
-//
-//        @State private var imageIndex = 0
-//        @State private var animationRunning = true
-//
-//        private let images = (1...10).map { "\($0)" }
-//
-//        var body: some View {
-//            Image(images[imageIndex])
-//                .resizable()
-//                .scaledToFill()
-//                .frame(maxWidth: .infinity, maxHeight: .infinity)
-//                .ignoresSafeArea()
-//                .onAppear {
-//                    startAnimation()
-//                }
-//        }
-//
-//        private func startAnimation() {
-//            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-//                imageIndex = (imageIndex + 1) % images.count
-//
-////                if imageIndex == images.count - 1 {
-////                    timer.invalidate()
-////                    animationRunning = false
-////                }
-//            }
-//        }
-//    }
-
-
-#Preview {
-    ContentView()
-}
 
 
 struct ContentView: View {
@@ -82,7 +34,6 @@ extension Color {
     }
 }
 
-//
-//#Preview {
-//    AnimatedBackgroundView()
-//}
+#Preview {
+    ContentView()
+}

@@ -1,15 +1,21 @@
-
 //
 //  ContentView.swift
 //  Cashi
 //
 //  Created by Ghala Alnemari on 24/08/1446 AH.
 import SwiftUI
+import CloudKit
 
 struct View3: View {
     @State private var selectedTab: String = "Qattah"
     @State private var showFullTracker = false
-
+    @StateObject private var viewModel = ViewModel2(user: nil) // جلب البيانات من CloudKit
+    @State private var updatingCalculationID: String?
+    @State private var updatingGoalID: CKRecord.ID? // ✅ تتبع الهدف الذي يتم تحديثه حالياً
+    @State private var isSelectingCalculations = false
+    // استخدام معرّف السجل بدلاً من goalName لتحديد الحسابات المختارة
+    @State private var selectedCalculationIDs = Set<CKRecord.ID>()
+    
     var body: some View {
         ZStack {
             // الخلفية المتدرجة
@@ -19,7 +25,7 @@ struct View3: View {
                 Color(hex: "0E0137")
             ]), startPoint: .topLeading, endPoint: .bottomTrailing)
             .ignoresSafeArea()
-
+            
             ScrollView(.vertical, showsIndicators: false) {
                 VStack {
                     // ✅ العناصر العلوية
@@ -31,9 +37,9 @@ struct View3: View {
                                 .symbolRenderingMode(.palette)
                                 .foregroundStyle(Color(hex: "290B83"), Color(hex: "4B7EDA"))
                                 .padding(.leading, 16)
-
+                            
                             Spacer()
-
+                            
                             Image(systemName: "plus.circle.fill")
                                 .resizable()
                                 .frame(width: 40, height: 40)
@@ -41,41 +47,182 @@ struct View3: View {
                                 .foregroundStyle(Color(hex: "290B83"), Color(hex: "4B7EDA"))
                                 .padding(.trailing, 16)
                         }
-
-                        // ✅ عنوان "Goals" وكلمة "Select"
+                        
+                        // عنوان "Goals" وزر "Select" + زر "Delete Selected" عند التحديد
                         HStack {
                             Text("Goals")
                                 .font(.title2)
                                 .bold()
                                 .foregroundColor(.white)
                                 .padding(.leading, 16)
-
+                            
                             Spacer()
-
-                            Text("Select")
-                                .font(.body)
-                                .bold()
-                                .foregroundColor(.blue)
-                                .padding(.trailing, 16)
+                            
+                            // زر "Delete Selected" يظهر عند التحديد ووجود سجلات مختارة
+                            if isSelectingCalculations && !selectedCalculationIDs.isEmpty {
+                                Button(action: {
+                                    Task {
+                                        for calcID in selectedCalculationIDs {
+                                            if let calc = viewModel.calculations.first(where: { $0.id == calcID }) {
+                                                await viewModel.deleteCalculation(calculation: calc)
+                                            }
+                                        }
+                                        selectedCalculationIDs.removeAll()
+                                        isSelectingCalculations = false
+                                    }
+                                }) {
+                                    Text("Delete Selected")
+                                        .font(.body)
+                                        .bold()
+                                        .foregroundColor(.red)
+                                }
+                                .padding(.trailing, 8)
+                            }
+                            
+                            // زر "Select" لتفعيل أو إيقاف وضع التحديد
+                            Button(action: {
+                                withAnimation {
+                                    isSelectingCalculations.toggle()
+                                    if !isSelectingCalculations {
+                                        selectedCalculationIDs.removeAll()
+                                    }
+                                }
+                            }) {
+                                Text("Select")
+                                    .font(.body)
+                                    .bold()
+                                    .foregroundColor(.blue)
+                            }
+                            .padding(.trailing, 16)
                         }
                     }
-
-                    // ✅ شريط الصور
+                    
+                    // ✅ شريط الصور - عرض سجلات Calculations
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
-                            ForEach(0..<2, id: \.self) { _ in
-                                Image(systemName: "photo")
-                                    .resizable()
-                                    .frame(width: 220, height: 120)
-                                    .scaledToFit()
-                                    .foregroundColor(.gray)
-                                    .background(Color.white.opacity(0.2))
-                                    .clipShape(RoundedRectangle(cornerRadius: 15))
+                            // استخدم id: \.id بدلاً من goalName للحصول على قيمة فريدة
+                            ForEach(viewModel.calculations, id: \.id) { calculation in
+                                ZStack(alignment: .topLeading) {
+                                    // خلفية البطاقة
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .fill(Color.white.opacity(0.2))
+                                        .frame(width: 220, height: 140)
+                                        .shadow(radius: 4)
+                                    
+                                    // عرض صورة الهدف: البحث عن Goal مطابق باستخدام goalName مع تجاهل المسافات والحالة
+                                    if let matchedGoal = viewModel.goals.first(where: {
+                                        $0.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ==
+                                        calculation.goalName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                                    }) {
+                                        if let imageData = matchedGoal.imageData,
+                                           let uiImage = UIImage(data: imageData) {
+                                            Image(uiImage: uiImage)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 220, height: 140)
+                                                .clipShape(RoundedRectangle(cornerRadius: 15))
+                                        } else {
+                                            Text(calculation.emoji)
+                                                .font(.system(size: 40))
+                                                .frame(width: 220, height: 140)
+                                                .background(Color.black.opacity(0.3))
+                                                .clipShape(RoundedRectangle(cornerRadius: 15))
+                                        }
+                                    } else {
+                                        Text(calculation.emoji)
+                                            .font(.system(size: 40))
+                                            .frame(width: 220, height: 140)
+                                            .background(Color.black.opacity(0.3))
+                                            .clipShape(RoundedRectangle(cornerRadius: 15))
+                                    }
+                                    
+                                    // معلومات الحساب
+                                    VStack(alignment: .leading) {
+                                        Text(calculation.goalName)
+                                            .font(.caption)
+                                            .foregroundColor(.white.opacity(0.8))
+                                            .bold()
+                                        
+                                        Text("$\(Int(calculation.cost))")
+                                            .font(.title3)
+                                            .bold()
+                                            .foregroundColor(.white)
+                                        
+                                        
+                                        
+                                        Text("\(calculateProgress(calculation: calculation))% ")
+                                            .font(.caption)
+                                            .bold()
+                                            .foregroundColor(.white.opacity(0.8))
+                                    }
+                                    .padding()
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    .padding(10)
+                                    
+                                    // شريط التقدم وأزرار التحكم
+                                    VStack {
+                                        Spacer()
+                                        HStack {
+                                            // زر نقصان (-)
+                                            Button(action: {
+                                                updateCalculationProgress(calculation: calculation, increase: false)
+                                            }) {
+                                                Circle()
+                                                    .fill(Color.blue)
+                                                    .frame(width: 30, height: 30)
+                                                    .overlay(
+                                                        Image(systemName: "minus")
+                                                            .foregroundColor(.white)
+                                                    )
+                                            }
+                                            .padding(.leading, 10)
+                                            
+                                            VStack {
+                                                ProgressView(value: calculateProgress(calculation: calculation) / 100, total: 1.0)
+                                                    .progressViewStyle(LinearProgressViewStyle(tint: Color.blue))
+                                                    .frame(width: 130)
+                                                    .animation(.easeInOut, value: calculateProgress(calculation: calculation))
+                                            }
+                                            
+                                            // زر زيادة (+)
+                                            Button(action: {
+                                                updateCalculationProgress(calculation: calculation, increase: true)
+                                            }) {
+                                                Circle()
+                                                    .fill(Color.blue)
+                                                    .frame(width: 30, height: 30)
+                                                    .overlay(
+                                                        Image(systemName: "plus")
+                                                            .foregroundColor(.white)
+                                                    )
+                                            }
+                                            .padding(.trailing, 10)
+                                        }
+                                        .padding(.bottom, 10)
+                                    }
+                                    
+                                    // عند تفعيل وضع التحديد، عرض أيقونة الاختيار في أعلى يمين البطاقة
+                                    if isSelectingCalculations {
+                                        let isSelected = selectedCalculationIDs.contains(calculation.id)
+                                        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                            .resizable()
+                                            .frame(width: 24, height: 24)
+                                            .foregroundColor(isSelected ? .blue : .white)
+                                            .padding(8)
+                                            .onTapGesture {
+                                                if isSelected {
+                                                    selectedCalculationIDs.remove(calculation.id)
+                                                } else {
+                                                    selectedCalculationIDs.insert(calculation.id)
+                                                }
+                                            }
+                                    }
+                                }
                             }
                         }
                         .padding(.horizontal, 16)
                     }
-
+                    
                     // ✅ "Friends"
                     HStack {
                         Text("Friends")
@@ -83,11 +230,11 @@ struct View3: View {
                             .bold()
                             .foregroundColor(.white)
                             .padding(.leading, 16)
-
+                        
                         Spacer()
                     }
                     .padding(.top, 20)
-
+                    
                     // ✅ التبويبات بين "Qattah" و "Challenge"
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 30) {
@@ -97,7 +244,7 @@ struct View3: View {
                                     .bold()
                                     .foregroundColor(selectedTab == "Qattah" ? .white : .gray)
                             }
-
+                            
                             Button(action: { withAnimation { selectedTab = "Challenge" } }) {
                                 Text("Challenge")
                                     .font(.headline)
@@ -106,14 +253,14 @@ struct View3: View {
                             }
                         }
                         .padding(.horizontal, 26)
-
+                        
                         // ✅ الخط الأزرق
                         ZStack(alignment: .leading) {
                             Rectangle()
                                 .frame(height: 2)
                                 .foregroundColor(.blue.opacity(0.5))
                                 .frame(maxWidth: .infinity)
-
+                            
                             RoundedRectangle(cornerRadius: 5)
                                 .frame(width: selectedTab == "Qattah" ? 70 : 95, height: 4)
                                 .foregroundColor(.white)
@@ -123,7 +270,7 @@ struct View3: View {
                         .padding(.leading, 16)
                     }
                     .padding(.top, 5)
-
+                    
                     // ✅ جعل QattahView قابلة للتمرير بالكامل
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
@@ -133,7 +280,7 @@ struct View3: View {
                                         .fill(Color(hex: "290B83"))
                                         .frame(width: 240, height: 300)
                                         .shadow(radius: 4)
-
+                                    
                                     ScrollView(.vertical, showsIndicators: false) {
                                         VStack(alignment: .leading, spacing: 10) {
                                             HStack {
@@ -145,7 +292,7 @@ struct View3: View {
                                                     .padding(.trailing, 14)
                                                     .padding(.top, 20)
                                             }
-
+                                            
                                             VStack(alignment: .leading) {
                                                 HStack {
                                                     ZStack {
@@ -153,20 +300,20 @@ struct View3: View {
                                                             .stroke(lineWidth: 6)
                                                             .foregroundColor(.gray.opacity(0.3))
                                                             .frame(width: 60, height: 60)
-
+                                                        
                                                         Circle()
                                                             .trim(from: 0, to: 0.2)
                                                             .stroke(Color(hex: "007AFF"), lineWidth: 6)
                                                             .frame(width: 60, height: 60)
                                                             .rotationEffect(.degrees(-90))
-
+                                                        
                                                         Text("🏡")
                                                             .font(.title3)
                                                     }
                                                     Spacer()
                                                 }
                                                 .padding(.leading, 12)
-
+                                                
                                                 Text("20% Achieved")
                                                     .font(.headline)
                                                     .bold()
@@ -174,7 +321,7 @@ struct View3: View {
                                                     .padding(.leading, 12)
                                                     .padding(.top, 3)
                                             }
-
+                                            
                                             VStack(alignment: .leading, spacing: 12) {
                                                 ForEach([
                                                     ("Sara", 5),
@@ -186,16 +333,16 @@ struct View3: View {
                                                         Text(user.0)
                                                             .font(.subheadline)
                                                             .foregroundColor(.white)
-
+                                                        
                                                         ZStack(alignment: .leading) {
                                                             RoundedRectangle(cornerRadius: 20)
                                                                 .frame(height: 20)
                                                                 .foregroundColor(.gray.opacity(0.3))
-
+                                                            
                                                             RoundedRectangle(cornerRadius: 20)
                                                                 .frame(width: max(CGFloat(user.1) * 2.5, 30), height: 20)
                                                                 .foregroundColor(Color(hex: "007AFF"))
-
+                                                            
                                                             HStack {
                                                                 Image(systemName: "person.circle.fill")
                                                                     .resizable()
@@ -203,9 +350,9 @@ struct View3: View {
                                                                     .clipShape(Circle())
                                                                     .foregroundColor(.white)
                                                                     .padding(.leading, 4)
-
+                                                                
                                                                 Spacer()
-
+                                                                
                                                                 Text("\(user.1)%")
                                                                     .font(.caption2)
                                                                     .bold()
@@ -235,41 +382,39 @@ struct View3: View {
                                                 Circle()
                                                     .stroke(lineWidth: 6)
                                                     .foregroundColor(.gray.opacity(0.3))
-                                                    .frame(width: 90, height: 90) // ✅ تكبير حجم الدائرة قليلاً
-
+                                                    .frame(width: 90, height: 90)
+                                                
                                                 Circle()
                                                     .trim(from: 0, to: CGFloat(user.2) / 100)
                                                     .stroke(Color(hex: "007AFF"), lineWidth: 6)
                                                     .frame(width: 90, height: 90)
                                                     .rotationEffect(.degrees(-90))
-
-                                                Image(user.1) // ✅ صورة البروفايل داخل الدائرة
+                                                
+                                                Image(user.1)
                                                     .resizable()
                                                     .scaledToFill()
-                                                    .frame(width: 65, height: 65) // ✅ ضبط حجم الصورة لتناسب الدائرة
+                                                    .frame(width: 65, height: 65)
                                                     .clipShape(Circle())
-                                                    .padding(5) // ✅ إضافة عازل صغير لجعل الصورة داخل الدائرة بشكل أفضل
+                                                    .padding(5)
                                             }
-
-                                            // ✅ وضع الاسم والنسبة مباشرة تحت الدائرة
+                                            
                                             Text(user.0)
                                                 .font(.caption)
                                                 .foregroundColor(.white)
                                                 .bold()
-
+                                            
                                             Text("\(user.2)% achieved")
                                                 .font(.caption2)
                                                 .foregroundColor(.white)
                                         }
-                                        .padding(.horizontal, 8) // ✅ ضبط المسافات الجانبية بين العناصر
+                                        .padding(.horizontal, 8)
                                     }
                                 }
-                                .padding(.top, -20) // ✅ رفع كل المكون للأعلى بطريقة آمنة دون حاجز
+                                .padding(.top, -20)
                             }
+                        }
                     }
-             }
-        .frame(height: 350)
-
+                    
                     // ✅ "CashTrack" مثل "Friends" و "Goals"
                     HStack {
                         Text("CashTrack")
@@ -277,24 +422,60 @@ struct View3: View {
                             .bold()
                             .foregroundColor(.white)
                             .padding(.leading, 16)
-
+                        
                         Spacer()
                     }
                     .padding(.top, 20)
                     
                     CashTrackerView()
-                                           .onTapGesture {
-                                               showFullTracker = true // ✅ عند الضغط، تفتح الصفحة الكاملة
-                                           }
-                                   }
-                               }
-                           }
-                           .fullScreenCover(isPresented: $showFullTracker) {
-                               CashTrackerView()
+                        .onTapGesture {
+                            showFullTracker = true // ✅ عند الضغط، تفتح الصفحة الكاملة
+                        }
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $showFullTracker) {
+            CashTrackerView()
+        }
+    }
+    
+    private func calculateProgress(calculation: Calculation) -> Double {
+        let progress = (calculation.salary / calculation.cost) * 100
+        return progress > 100 ? 100 : progress
+    }
+    
+    // دالة تحديث الحساب (Calculation) في iCloud مع تحديث الواجهة فورًا
+    private func updateCalculationProgress(calculation: Calculation, increase: Bool) {
+        Task {
+            var newSalary = calculation.salary
+            let increment = calculation.cost * 0.05 // زيادة أو نقصان 5% من التكلفة الإجمالية
+            
+            if increase {
+                newSalary += increment
+            } else {
+                newSalary = max(0, newSalary - increment)
+            }
+            
+            let updatedCalculation = Calculation(
+                id: calculation.id,
+                goalName: calculation.goalName,
+                cost: calculation.cost,
+                salary: newSalary,
+                savingsType: calculation.savingsType,
+                savingsRequired: calculation.savingsRequired,
+                emoji: calculation.emoji
+            )
+            
+            // 1) تحديث المصفوفة محليًا ليظهر التغيير مباشرةً
+            if let index = viewModel.calculations.firstIndex(where: { $0.id == calculation.id }) {
+                viewModel.calculations[index] = updatedCalculation
+            }
+            
+            // 2) حفظ التحديث في iCloud
+            await viewModel.updateCalculation(calculation: updatedCalculation)
         }
     }
 }
-
 
 #Preview {
     View3()

@@ -124,3 +124,4 @@ struct CalculationPage: View {
         .padding(.top, 20)
     }
 }
+

@@ -71,7 +71,29 @@ class ViewModel2: ObservableObject {
             }
         }
     }
-
+    // ✅ تحديث الحسابات في iCloud
+    func updateCalculation(calculation: Calculation) async {
+        let query = CKQuery(recordType: "Calculations", predicate: NSPredicate(format: "goalName == %@", calculation.goalName))
+        
+        do {
+            let results = try await database.perform(query, inZoneWith: nil)
+            
+            if let record = results.first {
+                record["salary"] = calculation.salary as CKRecordValue
+                
+                try await database.save(record)
+                print("✅ تم تحديث الحساب بنجاح")
+                
+                DispatchQueue.main.async {
+                    if let index = self.calculations.firstIndex(where: { $0.goalName == calculation.goalName }) {
+                        self.calculations[index] = calculation
+                    }
+                }
+            }
+        } catch {
+            print("⚠️ Failed to update calculation: \(error.localizedDescription)")
+        }
+    }
     // MARK: - حفظ الحسابات في iCloud ✅
     func saveCalculation(goal: Goal, cost: Double, salary: Double, savingsType: Goal.SavingsType, savingsRequired: Double) async {
         let record = CKRecord(recordType: "Calculations")
@@ -154,19 +176,80 @@ class ViewModel2: ObservableObject {
 
 // MARK: - نموذج الحساب (Calculation)
 struct Calculation {
+    let id: CKRecord.ID
     let goalName: String
     let cost: Double
-    let salary: Double
+    var salary: Double // ✅ جعله متغيرًا حتى نتمكن من تعديله
     let savingsType: Goal.SavingsType
     let savingsRequired: Double
     let emoji: String
-    
+
+    // ✅ مهيئ لتحميل البيانات من CloudKit
     init(record: CKRecord) {
+        self.id = record.recordID
         self.goalName = record["goalName"] as? String ?? ""
         self.cost = record["cost"] as? Double ?? 0.0
         self.salary = record["salary"] as? Double ?? 0.0
         self.savingsType = Goal.SavingsType(rawValue: record["savingsType"] as? String ?? "Monthly") ?? .monthly
         self.savingsRequired = record["savingsRequired"] as? Double ?? 0.0
         self.emoji = record["emoji"] as? String ?? "🎯"
+    }
+
+    // ✅ مهيئ مخصص لإنشاء نسخة جديدة بدون الحاجة إلى `CKRecord`
+    init(id: CKRecord.ID, goalName: String, cost: Double, salary: Double, savingsType: Goal.SavingsType, savingsRequired: Double, emoji: String) {
+        self.id = id
+        self.goalName = goalName
+        self.cost = cost
+        self.salary = salary
+        self.savingsType = savingsType
+        self.savingsRequired = savingsRequired
+        self.emoji = emoji
+    }
+}
+
+extension ViewModel2 {
+    func checkCloudKitStatus() async {
+        let container = CKContainer(identifier: "iCloud.CashiBackup")
+
+        do {
+            let status = try await container.accountStatus()
+            DispatchQueue.main.async {
+                switch status {
+                case .available:
+                    print("✅ حساب CloudKit متاح.")
+                case .noAccount:
+                    print("❌ لا يوجد حساب iCloud متصل بالجهاز.")
+                case .restricted:
+                    print("❌ الوصول إلى iCloud مقيد.")
+                case .couldNotDetermine:
+                    print("❌ لا يمكن تحديد حالة الحساب.")
+                case .temporarilyUnavailable:
+                    print("⚠️ حساب iCloud غير متاح مؤقتًا.")
+                @unknown default:
+                    print("❌ حالة غير معروفة لحساب iCloud.")
+                }
+            }
+        } catch {
+            print("❌ خطأ أثناء جلب حالة الحساب: \(error.localizedDescription)")
+        }
+    }
+    func deleteCalculation(calculation: Calculation) async {
+        let recordID = calculation.id
+        let database = container.publicCloudDatabase
+
+        do {
+            // أولاً، جلب السجل للتأكد من وجوده
+            let record = try await database.record(for: recordID)
+            try await database.deleteRecord(withID: record.recordID)
+
+            DispatchQueue.main.async {
+                self.calculations.removeAll { $0.id == calculation.id }
+                print("✅ تم حذف الحساب بنجاح من CloudKit والواجهة.")
+            }
+        } catch {
+            DispatchQueue.main.async {
+                print("⚠️ فشل حذف الحساب: \(error.localizedDescription)")
+            }
+        }
     }
 }
