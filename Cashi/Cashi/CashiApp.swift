@@ -34,18 +34,19 @@
 import SwiftUI
 import CloudKit
 
+
 @main
 struct CashiApp: App {
-    var currentUserIsSignedIn: Bool  // ✅ Fixed
+    @AppStorage("currentUserIsSignedIn") var currentUserIsSignedIn: Bool = false
 
     init() {
-        let userIsSignedIn: Bool = ProcessInfo.processInfo.arguments.contains("-UITest_startSignedIn") ? true : false
-        self.currentUserIsSignedIn = userIsSignedIn  // ✅ Now it works
+        let userIsSignedIn = ProcessInfo.processInfo.arguments.contains("_UITest_startSignedIn")
+        self.currentUserIsSignedIn = userIsSignedIn
     }
 
     var body: some Scene {
         WindowGroup {
-            IncomingRequestsView() 
+            GoalSelectionView()
         }
     }
 }

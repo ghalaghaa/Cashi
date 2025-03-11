@@ -4,9 +4,9 @@
 //
 //  Created by Ghala Alnemari on 24/08/1446 AH.
 //
-
 import SwiftUI
 import CloudKit
+
 
 
 struct User {
@@ -16,7 +16,10 @@ struct User {
 
     init?(record: CKRecord) {
         guard let name = record["name"] as? String,
-              let email = record["email"] as? String else { return nil }
+              let email = record["email"] as? String else {
+            print("⚠️ Missing required fields in User record: \(record)")
+            return nil
+        }
 
         self.id = record.recordID
         self.name = name
