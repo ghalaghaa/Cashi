@@ -10,39 +10,36 @@ import WidgetKit
 import SwiftUI
 import AppIntents
 
-// ✅ تعريف `AppIntent` لزيادة التقدم
 struct IncreaseProgressIntent: AppIntent {
     static var title: LocalizedStringResource = "Increase Progress"
 
     func perform() async throws -> some IntentResult {
         let key = "widget_progress"
         var progress = UserDefaults.standard.double(forKey: key)
-        progress = min(progress + 0.1, 1.0) // ✅ زيادة التقدم بحد أقصى 100%
+        progress = min(progress + 0.1, 1.0)
         
         UserDefaults.standard.set(progress, forKey: key)
-        WidgetCenter.shared.reloadAllTimelines() // ✅ تحديث الودجت
+        WidgetCenter.shared.reloadAllTimelines()
         
         return .result()
     }
 }
 
-// ✅ تعريف `AppIntent` لتقليل التقدم
 struct DecreaseProgressIntent: AppIntent {
     static var title: LocalizedStringResource = "Decrease Progress"
 
     func perform() async throws -> some IntentResult {
         let key = "widget_progress"
         var progress = UserDefaults.standard.double(forKey: key)
-        progress = max(progress - 0.1, 0.0) // ✅ تقليل التقدم بحد أدنى 0%
+        progress = max(progress - 0.1, 0.0)
         
         UserDefaults.standard.set(progress, forKey: key)
-        WidgetCenter.shared.reloadAllTimelines() // ✅ تحديث الودجت
+        WidgetCenter.shared.reloadAllTimelines()
         
         return .result()
     }
 }
 
-// ✅ مزود البيانات
 struct Provider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(progress: 0.4)
@@ -60,13 +57,11 @@ struct Provider: AppIntentTimelineProvider {
     }
 }
 
-// ✅ بيانات الإدخال للودجت
 struct SimpleEntry: TimelineEntry {
     let date = Date()
     let progress: Double
 }
 
-// ✅ واجهة الودجت
 struct CashiWidgetEntryView: View {
     var entry: Provider.Entry
 

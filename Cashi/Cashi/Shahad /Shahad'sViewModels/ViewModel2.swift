@@ -178,7 +178,7 @@ class ViewModel2: ObservableObject {
 struct Calculation {
     let id: CKRecord.ID
     let goalName: String
-    let cost: Double
+    var cost: Double
     var salary: Double // ✅ جعله متغيرًا حتى نتمكن من تعديله
     let savingsType: Goal.SavingsType
     let savingsRequired: Double
@@ -250,6 +250,29 @@ extension ViewModel2 {
             DispatchQueue.main.async {
                 print("⚠️ فشل حذف الحساب: \(error.localizedDescription)")
             }
+        }
+    }
+    func updateCalculation(_ calculation: Calculation) async {
+        do {
+            let record = try await database.record(for: calculation.id)
+            record["goalName"] = calculation.goalName as CKRecordValue
+            record["cost"] = calculation.cost as CKRecordValue
+            record["salary"] = calculation.salary as CKRecordValue
+            record["savingsType"] = calculation.savingsType.rawValue as CKRecordValue
+            record["savingsRequired"] = calculation.savingsRequired as CKRecordValue
+            record["emoji"] = calculation.emoji as CKRecordValue
+
+            try await database.save(record)
+            print("✅ Calculation updated in CloudKit")
+
+            // تأكيد التحديث للواجهة (ليس ضروري لأننا حدثنا مباشرة أعلاه، لكنه احتياطي)
+            DispatchQueue.main.async {
+                if let index = self.calculations.firstIndex(where: { $0.id == calculation.id }) {
+                    self.calculations[index] = calculation
+                }
+            }
+        } catch {
+            print("❌ Error updating calculation: \(error.localizedDescription)")
         }
     }
 }

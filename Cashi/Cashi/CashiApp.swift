@@ -45,7 +45,7 @@ struct CashiApp: App {
 
     var body: some Scene {
         WindowGroup {
-            GoalSelectionView() // ✅ Double-check the spelling
+            IncomingRequestsView() 
         }
     }
 }
