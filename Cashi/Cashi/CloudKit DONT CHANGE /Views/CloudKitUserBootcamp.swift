@@ -84,3 +84,6 @@ struct CloudKitUserView: View {
         }
     }
 }
+#Preview {
+    CloudKitUserView()
+}

@@ -20,6 +20,7 @@ struct ContentView: View {
             .ignoresSafeArea()
             .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true))
     }
+    
 }
 
 extension Color {

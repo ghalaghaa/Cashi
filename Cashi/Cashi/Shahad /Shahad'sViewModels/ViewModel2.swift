@@ -7,6 +7,10 @@ class ViewModel2: ObservableObject {
     @Published var calculations: [Calculation] = []
     @Published var error: String?
     @Published var user: User?
+    @Published var qattahGoals: [Goal] = []
+    @Published var challengeGoals: [Goal] = []
+    @Published var individualGoals: [Goal] = []
+
 
     private let container = CKContainer(identifier: "iCloud.CashiBackup")
     private let database: CKDatabase
@@ -18,6 +22,65 @@ class ViewModel2: ObservableObject {
             await fetchUsers()
             await fetchGoals()
             await fetchCalculations()
+            await fetchQattahGoals()
+            await fetchIndividualGoals()
+            await fetchChallengeGoals()
+
+        }
+    }
+    
+    func fetchQattahGoals() async {
+            let predicate = NSPredicate(format: "goalType == %@", Goal.GoalType.qattah.rawValue)  // تصفية الأهداف بناءً على goalType qattah
+            let query = CKQuery(recordType: "Goal", predicate: predicate)
+            do {
+                let results = try await database.perform(query, inZoneWith: nil)
+                let newGoals = results.compactMap { Goal(record: $0) }
+                DispatchQueue.main.async {
+                    self.qattahGoals = newGoals  // تخزين الأهداف في qattahGoals
+                    
+                    print("✅ Successfully fetched \(newGoals.count) qattah goals.")
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.error = "⚠️ Failed to fetch qattah goals: \(error.localizedDescription)"
+                    print(self.error!)
+                }
+            }
+        }
+    
+    func fetchIndividualGoals() async {
+        let predicate = NSPredicate(format: "goalType == %@", Goal.GoalType.individual.rawValue)
+        let query = CKQuery(recordType: "Goal", predicate: predicate)
+        do {
+            let results = try await database.perform(query, inZoneWith: nil)
+            let newGoals = results.compactMap { Goal(record: $0) }
+            DispatchQueue.main.async {
+                self.goals = newGoals
+                print("✅ Successfully fetched \(newGoals.count) individual goals.")
+            }
+        } catch {
+            DispatchQueue.main.async {
+                self.error = "⚠️ Failed to fetch individual goals: \(error.localizedDescription)"
+                print(self.error!)
+            }
+        }
+    }
+
+    func fetchChallengeGoals() async {
+        let predicate = NSPredicate(format: "goalType == %@", Goal.GoalType.challenge.rawValue)
+        let query = CKQuery(recordType: "Goal", predicate: predicate)
+        do {
+            let results = try await database.perform(query, inZoneWith: nil)
+            let newGoals = results.compactMap { Goal(record: $0) }
+            DispatchQueue.main.async {
+                self.challengeGoals = newGoals
+                print("✅ Successfully fetched \(newGoals.count) challenge goals.")
+            }
+        } catch {
+            DispatchQueue.main.async {
+                self.error = "⚠️ Failed to fetch challenge goals: \(error.localizedDescription)"
+                print(self.error!)
+            }
         }
     }
 
@@ -154,6 +217,7 @@ class ViewModel2: ObservableObject {
             }
         }
     }
+    
 
     // MARK: - 🔹 Update Goal
     func updateGoal(goal: Goal) async {

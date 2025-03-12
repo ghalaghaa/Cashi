@@ -59,5 +59,7 @@ struct Goal {
                 print("⚠️ Failed to load image data: \(error.localizedDescription)")
             }
         }
+        
     }
+
 }

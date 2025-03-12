@@ -46,7 +46,7 @@ struct CashiApp: App {
 
     var body: some Scene {
         WindowGroup {
-            GoalSelectionView()
+            View3()
         }
     }
 }

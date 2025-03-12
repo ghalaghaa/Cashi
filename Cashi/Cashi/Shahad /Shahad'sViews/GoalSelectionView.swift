@@ -36,7 +36,7 @@ struct GoalSelectionView: View {
                 }
             }
             .navigationBarHidden(true)
-            .navigationBarBackButtonHidden(true)
+//            .navigationBarBackButtonHidden(true)
             .onAppear(perform: loadUser)
             .alert("Error", isPresented: $showGoalSelectionError) {
                 Button("OK", role: .cancel) { }
@@ -218,6 +218,7 @@ struct GoalSelectionView: View {
 // ✅ مكون لاختيار الصور
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var imageData: Data?
+    
 
     class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
         let parent: ImagePicker
