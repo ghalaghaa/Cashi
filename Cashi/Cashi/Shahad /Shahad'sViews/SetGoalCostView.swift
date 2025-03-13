@@ -157,7 +157,7 @@ struct SetGoalCostView: View {
                 .frame(width: 40, height: 40)
                 .foregroundColor(.white)
             
-            Text("Good evening, \(user.name)")
+            Text("Hi, \(user.name)")
                 .foregroundColor(.white)
                 .font(.headline)
             

@@ -14,7 +14,7 @@ struct ChallengeGoalsView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 25) {
                 ForEach(viewModel.challengeGoals, id: \.id) { goal in
-                    VStack(spacing: 3) {
+                    VStack(spacing: 5) {
                         ZStack {
                             Circle()
                                 .stroke(lineWidth: 6)

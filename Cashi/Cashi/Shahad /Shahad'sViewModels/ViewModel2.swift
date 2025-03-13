@@ -26,27 +26,41 @@ class ViewModel2: ObservableObject {
             await fetchIndividualGoals()
             await fetchChallengeGoals()
 
+
         }
     }
     
+    func getGoalName(for goalType: Goal.GoalType) -> String {
+        switch goalType {
+        case .individual:
+            return "Individual Goal"
+        case .qattah:
+            return "Qattah Goal"
+        case .challenge:
+            return "Challenge Goal"
+        }
+    }
+
+    // مثال على جلب الأهداف (سيتم استخدام getGoalName هنا)
     func fetchQattahGoals() async {
-            let predicate = NSPredicate(format: "goalType == %@", Goal.GoalType.qattah.rawValue)  // تصفية الأهداف بناءً على goalType qattah
-            let query = CKQuery(recordType: "Goal", predicate: predicate)
-            do {
-                let results = try await database.perform(query, inZoneWith: nil)
-                let newGoals = results.compactMap { Goal(record: $0) }
-                DispatchQueue.main.async {
-                    self.qattahGoals = newGoals  // تخزين الأهداف في qattahGoals
-                    
-                    print("✅ Successfully fetched \(newGoals.count) qattah goals.")
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    self.error = "⚠️ Failed to fetch qattah goals: \(error.localizedDescription)"
-                    print(self.error!)
-                }
+        let predicate = NSPredicate(format: "goalType == %@", Goal.GoalType.qattah.rawValue)
+        let query = CKQuery(recordType: "Goal", predicate: predicate)
+        do {
+            let results = try await database.perform(query, inZoneWith: nil)
+            let newGoals = results.compactMap { Goal(record: $0) }
+            DispatchQueue.main.async {
+                self.qattahGoals = newGoals
+                print("✅ Successfully fetched \(newGoals.count) qattah goals.")
+            }
+        } catch {
+            DispatchQueue.main.async {
+                self.error = "⚠️ Failed to fetch qattah goals: \(error.localizedDescription)"
+                print(self.error!)
             }
         }
+    }
+    
+    
     
     func fetchIndividualGoals() async {
         let predicate = NSPredicate(format: "goalType == %@", Goal.GoalType.individual.rawValue)

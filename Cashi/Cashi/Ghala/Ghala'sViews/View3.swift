@@ -23,10 +23,13 @@ struct View3: View {
     @State private var showProgressSheet = false
     @State private var navigateToGoalSelectionView = false
     @State private var selectedGoal: Goal?
+    @State private var userName: String = ""
+    
     
     var body: some View {
         NavigationStack {
             ZStack {
+                Spacer()
                 LinearGradient(gradient: Gradient(colors: [Color(hex: "1F0179"), Color(hex: "160158"), Color(hex: "0E0137")]),
                                startPoint: .topLeading, endPoint: .bottomTrailing)
                     .ignoresSafeArea()
@@ -39,7 +42,8 @@ struct View3: View {
                                     navigateToGoalSelectionView = true
                                 },
                                 selectedGoals: $selectedGoals,
-                                isSelectingCalculations: $isSelectingCalculations
+                                isSelectingCalculations: $isSelectingCalculations,
+                                userName: $userName 
                             )
                             
                             GoalsSheetView(
@@ -67,12 +71,14 @@ struct View3: View {
                             
                             // Qattah or Challenge Goals View
                             if selectedTab == "Qattah" {
-                                QattahGoalsView(viewModel: viewModel, showOptionsSheet: $showOptionsSheet)
+                                QattahGoalsView(viewModel: viewModel, showOptionsSheet: $showOptionsSheet/*, userName: $userName*/)
                                     .padding(.top, 10)
                             } else {
                                 ChallengeGoalsView(viewModel: viewModel)
                                     .padding(.top, 25)
                                     .padding(.leading , 4)
+                                    .padding(.top, 10)
+
                             }
                             
                             Spacer(minLength: 20)
@@ -99,7 +105,7 @@ struct View3: View {
                         .padding(.top)
                     }
                     
-                    ProgressSheetView(showProgressSheet: $showProgressSheet)
+//                    ProgressSheetView()
                         .navigationDestination(isPresented: $navigateToGoalSelectionView) {
                             GoalSelectionView()
                         }

@@ -9,73 +9,111 @@ import SwiftUI
 import CloudKit
 
 struct QattahGoalsView: View {
-    var viewModel: ViewModel2
+    @ObservedObject var viewModel: ViewModel2
     @Binding var showOptionsSheet: Bool
+    @State private var showProgressSheet: Bool = false
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 16) {
-                ForEach(viewModel.qattahGoals, id: \.id) { goal in
-                    ZStack(alignment: .topTrailing) {
-                        RoundedRectangle(cornerRadius: 15)
-                            .fill(Color(hex: "290B83"))
-                            .frame(width: 240, height: 300)
-                            .shadow(radius: 4)
+        VStack {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(viewModel.qattahGoals, id: \.id) { goal in
+                        ZStack(alignment: .topTrailing) {
+                            RoundedRectangle(cornerRadius: 15)
+                                .fill(Color(hex: "290B83"))
+                                .frame(width: 240, height: 300)
+                                .shadow(radius: 4)
 
-                        VStack(alignment: .leading, spacing: 10) {
-                            // ✅ زر الثلاث نقاط أعلى يمين المربع
-                            HStack {
-                                Spacer()
-                                Button(action: {
-                                    showOptionsSheet = true
-                                }) {
-                                    Image(systemName: "ellipsis")
-                                        .foregroundColor(.white)
-                                        .padding(.trailing, 12)
-                                        .padding(.top, 12)
-                                }
-                            }
-
-                            // ✅ باقي المحتوى مرتفع للأعلى
-                            VStack(alignment: .leading, spacing: 8) {
-                                // الدائرة مع الإيموجي
-                                ZStack {
-                                    Circle()
-                                        .stroke(lineWidth: 6)
-                                        .foregroundColor(.gray.opacity(0.3))
-                                        .frame(width: 60, height: 60)
-
-                                    Circle()
-                                        .trim(from: 0, to: 0.2)
-                                        .stroke(Color(hex: "007AFF"), lineWidth: 6)
-                                        .frame(width: 60, height: 60)
-                                        .rotationEffect(.degrees(-90))
-
-                                    Text(goal.emoji)
-                                        .font(.title3)
-                                        .foregroundColor(.white)
+                            VStack(alignment: .leading, spacing: 4) {
+                                // زر الثلاث نقاط
+                                HStack {
+                                    Spacer()
+                                    Button(action: {
+                                        showProgressSheet = true
+                                    }) {
+                                        Image(systemName: "ellipsis")
+                                            .foregroundColor(.white)
+                                            .padding(.trailing, 12)
+                                            .padding(.top, 12)
+                                            .padding(.leading, -9)
+                                    }
                                 }
 
-                                Text(goal.name)
-                                    .font(.subheadline)
-                                    .foregroundColor(.white)
+                                HStack {
+                                    ZStack {
+                                        Circle()
+                                            .stroke(lineWidth: 6)
+                                            .foregroundColor(.gray.opacity(0.3))
+                                            .frame(width: 60, height: 60)
 
-                                Text("\(goal.salary.formatted())% Achieved")
-                                    .font(.headline)
-                                    .bold()
-                                    .foregroundColor(.white)
+                                        let progress = min(max(goal.salary, 0), 100) / 100.0
+                                        Circle()
+                                            .trim(from: 0, to: progress)
+                                            .stroke(Color(hex: "007AFF"), lineWidth: 6)
+                                            .frame(width: 60, height: 60)
+                                            .rotationEffect(.degrees(-90))
+
+                                        Text(goal.emoji)
+                                            .font(.title3)
+                                            .foregroundColor(.white)
+                                    }
+                                    .padding(.leading, 10)
+
+                                    VStack(alignment: .leading) {
+                                        Text(goal.name)
+                                            .font(.subheadline)
+                                            .foregroundColor(.white)
+                                            .bold()
+                                        Text("\(goal.salary.formatted())% Achieved")
+                                            .font(.caption)
+                                            .foregroundColor(.white)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.top, 8)
+
+                                VStack {
+                                    HStack {
+                                        Text("غندورة")
+                                            .font(.callout)
+                                            .foregroundColor(.white)
+                                            .padding(.leading, 8)
+                                        Spacer()
+                                    }
+                                    .padding(.top, 8)
+
+                                    ZStack {
+                                        ProgressView(value: Double(min(max(goal.salary, 0), 100)), total: 100)
+                                            .progressViewStyle(LinearProgressViewStyle(tint: Color(hex: "007AFF")))
+                                            .frame(height: 20)
+                                            .padding(.top, 6)
+
+                                        Image(systemName: "person.circle.fill")
+                                            .resizable()
+                                            .frame(width: 20, height: 20)
+                                            .offset(x: CGFloat(min(max(goal.salary, 0), 100)) / 100.0 * 200 - 100)
+                                    }
+                                }
                             }
-                            .padding(.leading, 16)
-                            .padding(.top, -10) // رفع العناصر قليلًا للأعلى
-                            
-                            Spacer()
+                            .padding(.horizontal, 16)
                         }
+                        .frame(width: 240, height: 300)
                     }
-                    .frame(width: 240, height: 300)
                 }
+                .padding(.horizontal, 16)
             }
-            .padding(.horizontal, 16)
+            .frame(height: 350)
         }
-        .frame(height: 350)
+        // هنا فقط نربط الشيت وليس خارجه
+        .sheet(isPresented: $showProgressSheet) {
+            ProgressSheetView()
+                .presentationDetents([.fraction(0.75)])
+        
+        
+        }
     }
+}
+
+#Preview {
+    View3()
 }

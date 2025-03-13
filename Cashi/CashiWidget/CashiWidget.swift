@@ -82,12 +82,11 @@ struct CashiWidgetEntryView: View {
                         .bold()
                         .foregroundColor(.white)
                         .padding(.top, 5)
-                        .offset(x: -10, y: 5) // ✅ تحريك لليمين قليلاً
+                        .offset(x: -10, y: 5)
                     Spacer()
                 }
                 .padding(.leading, 10)
 
-                // ✅ الدائرة التقدمية (تصغير الحجم إلى 70 بدلًا من 80)
                 ZStack {
                     Circle()
                         .stroke(Color.gray.opacity(0.4), lineWidth: 8)
@@ -111,7 +110,6 @@ struct CashiWidgetEntryView: View {
                 }
                 .padding(.vertical, 5)
 
-                // ✅ أزرار التحكم (استخدام `Button` مع `AppIntent`)
                 HStack(spacing: 50) {
                     Button(intent: DecreaseProgressIntent()) {
                         Circle()
