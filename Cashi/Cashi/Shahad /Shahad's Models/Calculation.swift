@@ -5,6 +5,7 @@
 //  Created by Shahad Abdulmohsen on 11/09/1446 AH.
 //
 
+
 import CloudKit
 import Foundation
 
@@ -16,7 +17,28 @@ struct Calculation {
     let savingsRequired: Double
     let savingsType: Goal.SavingsType
     let emoji: String
+    var progress: Double  // ✅ تتبع نسبة الإنجاز
+    var collectedAmount: Double // ✅ تتبع المبلغ المجمع
 
+
+    
+    
+    
+    // ✅ *تهيئة عادية مع قيم افتراضية*
+     init(id: CKRecord.ID, goalName: String, cost: Double, collectedAmount: Double = 0.0, salary: Double, savingsRequired: Double, savingsType: Goal.SavingsType, emoji: String, progress: Double = 0.0) {
+         self.id = id
+         self.goalName = goalName
+         self.cost = cost
+         self.collectedAmount = collectedAmount
+         self.salary = salary
+         self.savingsRequired = savingsRequired
+         self.savingsType = savingsType
+         self.emoji = emoji
+         self.progress = progress
+     }
+
+    
+    
     // ✅ تهيئة من `CKRecord` مع معالجة الأخطاء
     init?(record: CKRecord) {
         print("📝 Fetching Calculation Record: \(record.recordID.recordName)")
@@ -27,6 +49,7 @@ struct Calculation {
            let emoji = record["emoji"] as? String {
             self.goalName = goalName
             self.emoji = emoji
+            
             UserDefaults.standard.set(goalName, forKey: "lastValidGoalName")
             UserDefaults.standard.set(emoji, forKey: "lastValidGoalEmoji")
         } else {
@@ -46,6 +69,8 @@ struct Calculation {
         self.cost = (record["cost"] as? NSNumber)?.doubleValue ?? 0.0
         self.salary = (record["salary"] as? NSNumber)?.doubleValue ?? 0.0
         self.savingsRequired = (record["savingsRequired"] as? NSNumber)?.doubleValue ?? 0.0
+        self.collectedAmount = record["collectedAmount"] as? Double ?? 0.0  // ✅ قراءة المبلغ المجمع
+        self.progress = record["progress"] as? Double ?? (collectedAmount / cost) * 100  // ✅ تحديد نسبة الإنجاز
 
         if let savingsTypeRaw = record["savingsType"] as? String,
            let savingsType = Goal.SavingsType(rawValue: savingsTypeRaw) {
@@ -70,6 +95,10 @@ struct Calculation {
 
         record["goalName"] = goalName as CKRecordValue
         record["cost"] = NSNumber(value: cost)
+        record["collectedAmount"] = collectedAmount as CKRecordValue  // ✅ حفظ المبلغ المجمع
+        record["savingsRequired"] = savingsRequired as CKRecordValue  // ✅ إصلاح المشكلة هنا
+        record["progress"] = progress as CKRecordValue  // ✅ حفظ نسبة الإنجاز
+
         record["salary"] = NSNumber(value: salary)
         record["savingsRequired"] = NSNumber(value: savingsRequired)
 
@@ -85,4 +114,3 @@ struct Calculation {
         return record
     }
 }
-

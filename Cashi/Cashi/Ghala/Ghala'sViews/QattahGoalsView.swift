@@ -45,17 +45,25 @@ struct QattahGoalsView: View {
                                             .stroke(lineWidth: 6)
                                             .foregroundColor(.gray.opacity(0.3))
                                             .frame(width: 60, height: 60)
-
-                                        let progress = min(max(goal.salary, 0), 100) / 100.0
-                                        Circle()
-                                            .trim(from: 0, to: progress)
-                                            .stroke(Color(hex: "007AFF"), lineWidth: 6)
-                                            .frame(width: 60, height: 60)
-                                            .rotationEffect(.degrees(-90))
-
-                                        Text(goal.emoji)
-                                            .font(.title3)
-                                            .foregroundColor(.white)
+                                        
+                                        let progress = min(max(goal.collectedAmount / goal.cost, 0), 1.0) // ✅ حساب التقدم الصحيح
+                                        
+                                        ZStack {
+                                            Circle()
+                                                .stroke(lineWidth: 6)
+                                                .foregroundColor(.gray.opacity(0.3))
+                                                .frame(width: 60, height: 60)
+                                            
+                                            Circle()
+                                                .trim(from: 0, to: progress) // ✅ استخدم progress هنا
+                                                .stroke(Color(hex: "007AFF"), lineWidth: 6) // ✅ تطبيق stroke على الدائرة وليس على progress
+                                                .frame(width: 60, height: 60)
+                                                .rotationEffect(.degrees(-90)) // ✅ تصحيح دوران الدائرة
+                                            
+                                            Text(goal.emoji)
+                                                .font(.title3)
+                                                .foregroundColor(.white)
+                                        }
                                     }
                                     .padding(.leading, 10)
 
@@ -83,7 +91,7 @@ struct QattahGoalsView: View {
                                     .padding(.top, 8)
 
                                     ZStack {
-                                        ProgressView(value: Double(min(max(goal.salary, 0), 100)), total: 100)
+                                        ProgressView(value: Double(min(max(goal.collectedAmount / goal.cost, 0), 1.0)), total: 1.0)
                                             .progressViewStyle(LinearProgressViewStyle(tint: Color(hex: "007AFF")))
                                             .frame(height: 20)
                                             .padding(.top, 6)
@@ -91,7 +99,7 @@ struct QattahGoalsView: View {
                                         Image(systemName: "person.circle.fill")
                                             .resizable()
                                             .frame(width: 20, height: 20)
-                                            .offset(x: CGFloat(min(max(goal.salary, 0), 100)) / 100.0 * 200 - 100)
+                                            .offset(x: CGFloat(min(max(goal.collectedAmount / goal.cost, 0), 1.0)) * 200 - 100)
                                     }
                                 }
                             }
