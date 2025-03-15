@@ -1,15 +1,8 @@
 //
-//  ChallengeJoinRequest.swift
-//  Cashi
-//
-//  Created by Shahad Abdulmohsen on 15/09/1446 AH.
-//
-//
-//  ChallengeJoinRequest.swift
+//  ContentView.swift
 //  Cashi
 //
 //  Created by Ghala Alnemari on 24/08/1446 AH.
-//
 
 import Foundation
 import CloudKit
