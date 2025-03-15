@@ -68,10 +68,11 @@ struct StartTimerIntent: SetValueIntent {
 
     init(_ name: String) {
         self.name = name
+        self.value = true // أو false حسب رغبتك
     }
 
     func perform() async throws -> some IntentResult {
-        // Start the timer…
+        // Start the timer logic goes here
         return .result()
     }
 }

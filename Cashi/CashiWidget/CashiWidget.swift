@@ -4,12 +4,20 @@
 //
 //  Created by Ghala Alnemari on 08/09/1446 AH.
 //
-
+//
+//  CashiWidget.swift
+//  CashiWidget
+//
 
 import WidgetKit
 import SwiftUI
 import AppIntents
+import CloudKit
 
+
+
+
+// MARK: - AppIntents
 struct IncreaseProgressIntent: AppIntent {
     static var title: LocalizedStringResource = "Increase Progress"
     
@@ -30,38 +38,41 @@ struct DecreaseProgressIntent: AppIntent {
     }
 }
 
+// MARK: - Timeline Provider
 struct Provider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(progress: 0.4, goalName: "Goal")
-    }
+        SimpleEntry(progress: 0.4, goalName: "Goal", goalEmoji: "🎯")    }
 
     func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> SimpleEntry {
-        let (name, progress) = await fetchGoalData()
-        return SimpleEntry(progress: progress, goalName: name)
+        let (name, progress, emoji) = await fetchGoalData()
+        return SimpleEntry(progress: progress, goalName: name, goalEmoji: emoji)
     }
 
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
-        let (name, progress) = await fetchGoalData()
-        let entry = SimpleEntry(progress: progress, goalName: name)
+        let (name, progress, emoji) = await fetchGoalData()
+        print("📊 Timeline updated with goal: \(name) – progress: \(progress)")
+        let entry = SimpleEntry(progress: progress, goalName: name, goalEmoji: emoji)
         return Timeline(entries: [entry], policy: .atEnd)
     }
-
-    private func fetchGoalData() async -> (String, Double) {
+    
+    private func fetchGoalData() async -> (String, Double, String) {
         await withCheckedContinuation { continuation in
-            GoalWidgetManager.shared.fetchLatestIndividualGoal { name, progress in
-                continuation.resume(returning: (name, progress))
+            GoalWidgetManager.shared.fetchLatestIndividualGoal { name, progress, emoji in
+                continuation.resume(returning: (name, progress, emoji))
             }
         }
     }
 }
 
+// MARK: - Entry
 struct SimpleEntry: TimelineEntry {
     let date = Date()
     let progress: Double
     let goalName: String
-
+    let goalEmoji: String
 }
 
+// MARK: - Widget View
 struct CashiWidgetEntryView: View {
     var entry: Provider.Entry
 
@@ -92,7 +103,6 @@ struct CashiWidgetEntryView: View {
                         .stroke(Color.gray.opacity(0.4), lineWidth: 8)
                         .frame(width: 70, height: 70)
 
-                    // ✅ حماية القيمة من أن تكون غير صالحة
                     let safeProgress = entry.progress.isFinite && entry.progress >= 0 ? min(entry.progress, 1.0) : 0
 
                     Circle()
@@ -107,8 +117,7 @@ struct CashiWidgetEntryView: View {
                         )
                         .frame(width: 70, height: 70)
                         .rotationEffect(.degrees(-90))
-
-                    Text("🏝️")
+                        .animation(.easeInOut(duration: 0.3), value: safeProgress)
                         .font(.system(size: 22))
                 }
                 .padding(.vertical, 5)
@@ -144,7 +153,7 @@ struct CashiWidgetEntryView: View {
     }
 }
 
-// ✅ إعداد الودجت
+// MARK: - Widget Configuration
 struct CashiWidget: Widget {
     let kind: String = "CashiWidget"
 
@@ -153,12 +162,12 @@ struct CashiWidget: Widget {
             CashiWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("CashTrack")
-        .description("تعقب هدف رحلتك بسهولة.")
+        .description("تعقب هدفك الفردي بسهولة.")
         .supportedFamilies([.systemSmall])
     }
 }
 
-// ✅ دعم الألوان من HEX
+// MARK: - Hex Color Extension
 extension Color {
     init(hex: String) {
         let scanner = Scanner(string: hex)
@@ -171,48 +180,37 @@ extension Color {
     }
 }
 
-
-import CloudKit
-
+// MARK: - CloudKit Manager
 class GoalWidgetManager {
     static let shared = GoalWidgetManager()
     let container = CKContainer(identifier: "iCloud.CashiBackup")
     lazy var database = container.publicCloudDatabase
 
-    /// ✅ Fetch the latest individual goal with name and progress
-    func fetchLatestIndividualGoal(completion: @escaping (String, Double) -> Void) {
+    func fetchLatestIndividualGoal(completion: @escaping (String, Double, String) -> Void) {
         let predicate = NSPredicate(format: "goalType == %@", "individual")
         let query = CKQuery(recordType: "Goal", predicate: predicate)
-        query.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
 
         database.perform(query, inZoneWith: nil) { results, error in
             if let error = error {
                 print("⚠️ Error fetching goal: \(error.localizedDescription)")
-                completion("No Goal", 0.0)
+                completion("No Goal", 0.0, "❌")
                 return
             }
 
-            guard let goal = results?.first else {
-                completion("No Goal", 0.0)
-                return
+            if let goal = results?.first {
+                let name = goal["name"] as? String ?? "Unnamed Goal"
+                let cost = goal["cost"] as? Double ?? 1
+                let collected = goal["collectedAmount"] as? Double ?? 0
+                let emoji = goal["emoji"] as? String ?? "🎯"
+                let progress = cost > 0 ? collected / cost : 0
+                print("✅ Goal fetched: \(name), progress: \(progress), emoji: \(emoji)")
+                completion(name, progress, emoji)
+            } else {
+                print("⚠️ No individual goals found in CloudKit")
+                completion("No Goal", 0.0, "❌")
             }
-
-            let name = goal["name"] as? String ?? "Unnamed Goal"
-            let cost = goal["cost"] as? Double ?? 1
-            let collected = goal["collectedAmount"] as? Double ?? 0
-            let progress = cost > 0 ? collected / cost : 0
-            completion(name, progress)
         }
     }
-
-    /// ✅ Simple method if you only want progress (without name)
-    func fetchProgress(completion: @escaping (Double) -> Void) {
-        fetchLatestIndividualGoal { _, progress in
-            completion(progress)
-        }
-    }
-
-    /// ✅ Update collectedAmount for latest individual goal
     func updateProgress(increase: Bool) async {
         let predicate = NSPredicate(format: "goalType == %@", "individual")
         let query = CKQuery(recordType: "Goal", predicate: predicate)
@@ -220,22 +218,37 @@ class GoalWidgetManager {
 
         do {
             let records = try await database.perform(query, inZoneWith: nil)
-            guard let goal = records.first else { return }
+            guard let goal = records.first else {
+                print("❌ No individual goal found to update")
+                return
+            }
 
-            let currentCollected = goal["collectedAmount"] as? Double ?? 0
-            let cost = goal["cost"] as? Double ?? 1
-            let newCollected = min(max(currentCollected + (increase ? 10 : -10), 0), cost)
+            // ✅ جلب أحدث نسخة من السجل
+            let latestRecord = try await database.record(for: goal.recordID)
 
-            goal["collectedAmount"] = newCollected
-            _ = try await database.save(goal)
+            let currentCollected = latestRecord["collectedAmount"] as? Double ?? 0
+            let cost = latestRecord["cost"] as? Double ?? 1
+
+            // ✅ رفع القيمة تدريجيًا لإحساس بالحركة
+            let amountToAdd: Double = increase ? 10 : -10
+            let newCollected = min(max(currentCollected + amountToAdd, 0), cost)
+
+            latestRecord["collectedAmount"] = newCollected
+            try await database.save(latestRecord)
+
+            print("✅ Progress updated to: \(newCollected)")
+
+            // ✅ إعادة تحميل الودجت لإظهار التقدم
+            WidgetCenter.shared.reloadAllTimelines()
 
         } catch {
-            print("⚠️ Error updating goal progress: \(error)")
+            print("❌ Error updating progress: \(error)")
         }
     }
 }
+// MARK: - Preview
 #Preview(as: .systemSmall) {
     CashiWidget()
 } timeline: {
-    SimpleEntry(progress: 0.4, goalName: "Trip to Bali")
+    SimpleEntry(progress: 0.4, goalName: "Trip to Bali", goalEmoji: "🌴")
 }

@@ -65,7 +65,7 @@ struct CalculationPage: View {
             .hidden()
         )
         .background(
-            NavigationLink(
+        NavigationLink(
                 destination: View3(), // ✅ Navigate to View3
                 isActive: $navigateToView3
             ) { EmptyView() }

@@ -163,7 +163,7 @@ struct Onboarding4View: View {
                                                     endPoint: UnitPoint(x: 0.5, y: 1)
                                                 )
                                         )
-                                    .cornerRadius(40)
+                                   .cornerRadius(40)
                                     .padding(.horizontal, 10)
                                 }
                         }
