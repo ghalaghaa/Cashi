@@ -1,10 +1,11 @@
-//
-//  ContentView.swift
-//  Cashi
-//
-//  Created by Ghala Alnemari on 24/08/1446 AH.
-//
+import Foundation
 
-import SwiftUI
-import CloudKit
+struct ADFriend: Identifiable {
+    let id: String
+    let name: String
+}
 
+struct ADChallenge: Identifiable {
+    let id: String
+    let name: String
+}

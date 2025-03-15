@@ -1,7 +1,7 @@
 import CloudKit
 import Foundation
 
-struct Goal {
+struct Goal:Identifiable,Equatable {
     var id: CKRecord.ID
     var name: String
     var cost: Double
@@ -12,6 +12,7 @@ struct Goal {
     var savingsType: SavingsType
     var participants: Int? // ✅ عدد المشاركين في Qattah فقط
     var collectedAmount: Double // ✅ تتبع المبلغ المجمع
+    var modifiedDate: Date?
     
     
     enum SavingsType: String, CaseIterable {

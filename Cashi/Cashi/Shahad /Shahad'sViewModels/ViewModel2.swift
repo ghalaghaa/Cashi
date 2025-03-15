@@ -11,10 +11,10 @@ class ViewModel2: ObservableObject {
     @Published var qattahGoals: [Goal] = []
     @Published var challengeGoals: [Goal] = []
     @Published var individualGoals: [Goal] = []
-
+    
     private let container = CKContainer(identifier: "iCloud.CashiBackup")
     private let database: CKDatabase
-
+    
     init(user: User?) {
         self.database = container.publicCloudDatabase
         self.user = user
@@ -27,27 +27,27 @@ class ViewModel2: ObservableObject {
             await fetchGoals()
             await fetchCalculations()
             await fetchQattahGoals()
-//            await fetchIndividualGoals()
+            //            await fetchIndividualGoals()
             await fetchChallengeGoals()
         }
     }
     
     func fetchUsers() async {
-            let query = CKQuery(recordType: "ADDUsers", predicate: NSPredicate(value: true))
+        let query = CKQuery(recordType: "ADDUsers", predicate: NSPredicate(value: true))
+        
+        do {
+            let results = try await database.perform(query, inZoneWith: nil)
+            let fetchedUsers = results.compactMap { User(record: $0) }
             
-            do {
-                let results = try await database.perform(query, inZoneWith: nil)
-                let fetchedUsers = results.compactMap { User(record: $0) }
-                
-                DispatchQueue.main.async {
-                    self.user = fetchedUsers.first
-                    print("✅ Fetched \(fetchedUsers.count) users")
-                }
-            } catch {
-                print("❌ Error fetching users: \(error.localizedDescription)")
+            DispatchQueue.main.async {
+                self.user = fetchedUsers.first
+                print("✅ Fetched \(fetchedUsers.count) users")
             }
+        } catch {
+            print("❌ Error fetching users: \(error.localizedDescription)")
         }
-
+    }
+    
     func fetchGoals() async {
         let query = CKQuery(recordType: "Goal", predicate: NSPredicate(value: true))
         do {
@@ -71,7 +71,7 @@ class ViewModel2: ObservableObject {
     }
     func calculateSavingsForGoal(goal: Goal, savingRate: Double) -> (savingsPerMonth: Double, duration: Int) {
         guard goal.cost > 0, savingRate > 0 else { return (0, 0) }
-
+        
         let costPerPerson: Double
         if goal.goalType == .qattah, let participants = goal.participants {
             costPerPerson = goal.cost / Double(participants) // ✅ تقسيم التكلفة على عدد المشاركين
@@ -81,7 +81,7 @@ class ViewModel2: ObservableObject {
         
         let savingsPerMonth = costPerPerson * savingRate // ✅ يتم تحديد نسبة التوفير من قبل المستخدم
         let duration = Int(ceil(costPerPerson / savingsPerMonth))
-
+        
         return (savingsPerMonth, max(1, duration)) // ✅ تجنب القيم السالبة أو 0
     }
     
@@ -101,25 +101,30 @@ class ViewModel2: ObservableObject {
             }
         }
     }
-
-//    func fetchIndividualGoals() async {
-//        let predicate = NSPredicate(format: "goalType == %@", Goal.GoalType.individual.rawValue)
-//        let query = CKQuery(recordType: "Goal", predicate: predicate)
-//        do {
-//            let results = try await database.perform(query, inZoneWith: nil)
-//            let newGoals = results.compactMap { Goal(record: $0) }
-//            DispatchQueue.main.async {
-//                self.goals = newGoals
-//                print("✅ Successfully fetched \(newGoals.count) individual goals.")
-//            }
-//        } catch {
-//            DispatchQueue.main.async {
-//                self.error = "⚠️ Failed to fetch individual goals: \(error.localizedDescription)"
-//                print(self.error!)
+    
+//        func fetchIndividualGoals() async {
+//            var onAddGoal: () -> Void
+//            @Binding var selectedGoal: Goal?
+//           @Binding var selectedGoals: [Goal]
+//           @Binding var isSelectingGoals: Bool
+//            
+//            let predicate = NSPredicate(format: "goalType == %@", Goal.GoalType.individual.rawValue)
+//            let query = CKQuery(recordType: "Goal", predicate: predicate)
+//            do {
+//                let results = try await database.perform(query, inZoneWith: nil)
+//                let newGoals = results.compactMap { Goal(record: $0) }
+//                DispatchQueue.main.async {
+//                    self.goals = newGoals
+//                    print("✅ Successfully fetched \(newGoals.count) individual goals.")
+//                }
+//            } catch {
+//                DispatchQueue.main.async {
+//                    self.error = "⚠️ Failed to fetch individual goals: \(error.localizedDescription)"
+//                    print(self.error!)
+//                }
 //            }
 //        }
-//    }
-
+    
     func fetchChallengeGoals() async {
         let predicate = NSPredicate(format: "goalType == %@", Goal.GoalType.challenge.rawValue)
         let query = CKQuery(recordType: "Goal", predicate: predicate)
@@ -137,49 +142,49 @@ class ViewModel2: ObservableObject {
             }
         }
     }
-
+    
     func updateCalculation(calculation: Calculation) async {
         do {
             let record = try await database.record(for: calculation.id)
             record["salary"] = calculation.salary as CKRecordValue
-
+            
             try await database.save(record)
             print("✅ Calculation updated successfully")
         } catch {
             print("❌ Error updating calculation: \(error.localizedDescription)")
         }
     }
-
+    
     func updateCalculationProgress(calculation: Calculation, increase: Bool) async {
         do {
             let record = try await database.record(for: calculation.id)
             let currentSalary = record["salary"] as? Double ?? 0.0
             let newSalary = increase ? currentSalary + 10 : max(0, currentSalary - 10)
-
+            
             record["salary"] = newSalary as CKRecordValue
-
+            
             try await database.save(record)
             print("✅ Calculation progress updated successfully")
-
+            
             await fetchCalculations()
         } catch {
             print("❌ Error updating calculation progress: \(error.localizedDescription)")
         }
     }
-
+    
     func updateGoalCollectedAmount(goal: Goal, increase: Bool) async {
         do {
             print("🚀 Updating collected amount for goal: \(goal.name)")
-
+            
             let record = try await database.record(for: goal.id)
             let currentCollectedAmount = record["collectedAmount"] as? Double ?? 0.0
             let newCollectedAmount = increase ? currentCollectedAmount + 100 : max(0, currentCollectedAmount - 100)
-
+            
             record["collectedAmount"] = newCollectedAmount as CKRecordValue
-
+            
             try await database.save(record)
             print("✅ Goal collected amount updated successfully.")
-
+            
             // ✅ Update local state
             DispatchQueue.main.async {
                 if let index = self.goals.firstIndex(where: { $0.id == goal.id }) {
@@ -206,21 +211,21 @@ class ViewModel2: ObservableObject {
             }
         }
     }
-
+    
     func saveGoal(goal: Goal) async -> Bool {
         let record = CKRecord(recordType: "Goal", recordID: goal.id)
-
+        
         record["name"] = goal.name as CKRecordValue
         record["cost"] = goal.cost as CKRecordValue
         record["salary"] = goal.salary as CKRecordValue
         record["savingsType"] = goal.savingsType.rawValue as CKRecordValue
         record["emoji"] = goal.emoji as CKRecordValue
         record["goalType"] = goal.goalType.rawValue as CKRecordValue
-
+        
         if goal.goalType == .qattah, let participants = goal.participants {
             record["participants"] = participants as CKRecordValue
         }
-
+        
         do {
             try await database.save(record)
             print("✅ Goal saved successfully: \(goal.name)")
@@ -232,38 +237,58 @@ class ViewModel2: ObservableObject {
     }
     
     func saveCalculation(goal: Goal, cost: Double?, salary: Double?, savingsType: Goal.SavingsType?, savingsRequired: Double, completion: ((Bool) -> Void)? = nil) async {
-           let safeCost = cost ?? 0.0
-           let safeSalary = salary ?? 0.0
-           let validSavingsType = savingsType ?? .monthly
+        let safeCost = cost ?? 0.0
+        let safeSalary = salary ?? 0.0
+        let validSavingsType = savingsType ?? .monthly
+        
+        let record = CKRecord(recordType: "Calculations")
+        record["goalName"] = goal.name as CKRecordValue
+        record["cost"] = NSNumber(value: safeCost)
+        record["salary"] = NSNumber(value: safeSalary)
+        record["savingsType"] = validSavingsType.rawValue as CKRecordValue
+        record["savingsRequired"] = NSNumber(value: savingsRequired)
+        record["emoji"] = goal.emoji as CKRecordValue
+        
+        do {
+            try await database.save(record)
+            DispatchQueue.main.async {
+                if let calculation = Calculation(record: record) {
+                    self.calculations.append(calculation)
+                    print("✅ Calculation saved successfully: \(goal.name)")
+                    completion?(true)
+                } else {
+                    print("⚠️ Failed to convert saved record to Calculation")
+                    completion?(false)
+                }
+            }
+        } catch {
+            DispatchQueue.main.async {
+                self.error = "⚠️ Failed to save calculation: \(error.localizedDescription)"
+                completion?(false)
+            }
+        }
+    }
+    
+    func deleteGoal(_ goal: Goal) async -> Bool {
+            do {
+                // ✅ Delete the goal from CloudKit or local storage
+                // Assuming you're using CloudKit:
+                let recordID = goal.id
+                let database = CKContainer.default().privateCloudDatabase
+                try await database.deleteRecord(withID: recordID)
+                
+                DispatchQueue.main.async {
+                    self.goals.removeAll { $0.id == goal.id }
+                }
+                
+                return true // ✅ Successfully deleted
+            } catch {
+                print("❌ Error deleting goal: \(error.localizedDescription)")
+                return false // ❌ Deletion failed
+            }
+        }
+    
 
-           let record = CKRecord(recordType: "Calculations")
-           record["goalName"] = goal.name as CKRecordValue
-           record["cost"] = NSNumber(value: safeCost)
-           record["salary"] = NSNumber(value: safeSalary)
-           record["savingsType"] = validSavingsType.rawValue as CKRecordValue
-           record["savingsRequired"] = NSNumber(value: savingsRequired)
-           record["emoji"] = goal.emoji as CKRecordValue
-
-           do {
-               try await database.save(record)
-               DispatchQueue.main.async {
-                   if let calculation = Calculation(record: record) {
-                       self.calculations.append(calculation)
-                       print("✅ Calculation saved successfully: \(goal.name)")
-                       completion?(true)
-                   } else {
-                       print("⚠️ Failed to convert saved record to Calculation")
-                       completion?(false)
-                   }
-               }
-           } catch {
-               DispatchQueue.main.async {
-                   self.error = "⚠️ Failed to save calculation: \(error.localizedDescription)"
-                   completion?(false)
-               }
-           }
-       }
-       
     func updateGoal(goal: Goal) async {
         do {
             let record = try await database.record(for: goal.id)
@@ -288,3 +313,24 @@ class ViewModel2: ObservableObject {
         }
     }
 }
+func generateSavingPointsFromGoals(goals: [Goal]) -> [SavingPoint] {
+            return goals.map { goal in
+                let date = goal.modifiedDate ?? Date() // استخدم التاريخ من السجل أو الآن إذا لم يكن موجودًا
+                return SavingPoint(date: date, amount: goal.collectedAmount)
+            }
+        }
+    
+    func generateGroupedSavingPoints(from goals: [Goal], granularity: Calendar.Component) -> [SavingPoint] {
+        let calendar = Calendar.current
+        var grouped: [Date: Double] = [:]
+        
+        for goal in goals {
+            let date = goal.modifiedDate ?? Date()
+            let components = calendar.dateComponents([granularity], from: date)
+            if let groupedDate = calendar.date(from: components) {
+                grouped[groupedDate, default: 0.0] += goal.collectedAmount
+            }
+        }
+        
+        return grouped.map { SavingPoint(date: $0.key, amount: $0.value) }
+    }

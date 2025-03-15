@@ -80,10 +80,13 @@ struct View3: View {
                             FriendsSectionView()
                             TabsHeaderView(selectedTab: $selectedTab)
 
-                            if selectedTab == "Qattah" {
-                                QattahGoalsView(viewModel: viewModel, showOptionsSheet: $showOptionsSheet)
-                                    .padding(.top, 10)
-                            } else {
+                            if selectedTab == "Qattah", let currentUser = viewModel.user {
+                            QattahGoalsView(viewModel: viewModel,
+                                                             showOptionsSheet: $showOptionsSheet,
+                                                             userName: userName,
+                                                             currentUser: currentUser
+                                                         )
+                                                     }else {
                                 ChallengeGoalsView(viewModel: viewModel)
                                     .padding(.top, 25)
                                     .padding(.leading, 4)
@@ -102,7 +105,7 @@ struct View3: View {
                                     Spacer()
                                 }
 
-                                CashTrackerView()
+                                CashTrackerView(goals: viewModel.goals)
                                     .onTapGesture {
                                         showFullTracker = true
                                     }
@@ -115,7 +118,7 @@ struct View3: View {
                         GoalSelectionView()
                     }
                     .fullScreenCover(isPresented: $showFullTracker) {
-                        CashTrackerView()
+                        CashTrackerView(goals: viewModel.goals)
                     }
                 }
             }

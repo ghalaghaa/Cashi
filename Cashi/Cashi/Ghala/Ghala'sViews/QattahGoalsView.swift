@@ -12,7 +12,10 @@ struct QattahGoalsView: View {
     @ObservedObject var viewModel: ViewModel2
     @Binding var showOptionsSheet: Bool
     @State private var showProgressSheet: Bool = false
+    var userName: String
+    var currentUser: User
 
+    
     var body: some View {
         VStack {
             ScrollView(.horizontal, showsIndicators: false) {
@@ -78,11 +81,11 @@ struct QattahGoalsView: View {
                                     }
                                     Spacer()
                                 }
-                                .padding(.top, 8)
+                                .padding(.top, 10)
 
                                 VStack {
                                     HStack {
-                                        Text("غندورة")
+                                        Text(userName)
                                             .font(.callout)
                                             .foregroundColor(.white)
                                             .padding(.leading, 8)
@@ -114,7 +117,7 @@ struct QattahGoalsView: View {
         }
         // هنا فقط نربط الشيت وليس خارجه
         .sheet(isPresented: $showProgressSheet) {
-            ProgressSheetView()
+            ProgressSheetView(currentUser: currentUser, challengeName: "رمضان قطه")
                 .presentationDetents([.fraction(0.75)])
         
         

@@ -7,7 +7,7 @@ struct GoalSelectionView: View {
     @StateObject private var viewModel: ViewModel2
     
     @State private var name = ""
-    @State private var savedGoal: Goal?
+    @State private var savedGoal: Goal? // ✅ Allow nil at the start
     @State private var selectedGoal: String?
     @State private var imageData: Data?
     @State private var isImagePickerPresented = false
@@ -36,7 +36,7 @@ struct GoalSelectionView: View {
                 }
             }
             .navigationBarHidden(true)
-//            .navigationBarBackButtonHidden(true)
+            .navigationBarBackButtonHidden(true)
             .onAppear(perform: loadUser)
             .alert("Error", isPresented: $showGoalSelectionError) {
                 Button("OK", role: .cancel) { }
@@ -44,9 +44,16 @@ struct GoalSelectionView: View {
                 Text("Please select a goal, enter a name, and upload an image before proceeding.")
             }
 
-            if let currentUser = viewModel.user, let savedGoal = savedGoal {
+            // ✅ Fixed NavigationLink
+            if let currentUser = viewModel.user {
                 NavigationLink(
-                    destination: SetGoalCostView(goal: savedGoal, user: currentUser),
+                    destination: SetGoalCostView(
+                        goal: Binding(
+                            get: { savedGoal ?? Goal.defaultGoal() }, // ✅ Fix: Ensures goal is always non-optional
+                            set: { savedGoal = $0 }
+                        ),
+                        user: currentUser
+                    ),
                     isActive: $navigateToSetGoalCost
                 ) { EmptyView() }
                 .hidden()
@@ -54,7 +61,6 @@ struct GoalSelectionView: View {
         }
     }
 
-    // ✅ جلب المستخدم عند فتح الصفحة
     private func loadUser() {
         Task {
             do {
@@ -62,9 +68,6 @@ struct GoalSelectionView: View {
                 DispatchQueue.main.async {
                     if let fetchedUser = vm.currentUser {
                         viewModel.user = fetchedUser
-                        print("✅ User fetched successfully: \(fetchedUser.name)")
-                    } else {
-                        print("⚠️ No user found.")
                     }
                 }
             } catch {
@@ -73,7 +76,6 @@ struct GoalSelectionView: View {
         }
     }
 
-    // ✅ الخلفية المتدرجة
     private func backgroundGradient() -> some View {
         LinearGradient(
             gradient: Gradient(colors: [Color(hex: "1F0179"), Color(hex: "160158"), Color(hex: "0E0137")]),
@@ -82,7 +84,6 @@ struct GoalSelectionView: View {
         )
     }
 
-    // ✅ الهيدر العلوي
     private func headerView() -> some View {
         HStack {
             Image(systemName: "person.circle")
@@ -100,7 +101,6 @@ struct GoalSelectionView: View {
         .padding(.top, 50)
     }
 
-    // ✅ واجهة اختيار الهدف
     private func goalSelectionView() -> some View {
         VStack(spacing: 20) {
             Text("Choose your Goal")
@@ -143,7 +143,6 @@ struct GoalSelectionView: View {
         )
     }
 
-    // ✅ إدخال اسم الهدف
     private func goalNameTextField() -> some View {
         TextField("Type your Goal", text: $name)
             .padding()
@@ -153,7 +152,6 @@ struct GoalSelectionView: View {
             .padding(.horizontal)
     }
 
-    // ✅ اختيار صورة للهدف
     private func imagePickerView() -> some View {
         VStack {
             Button(action: { isImagePickerPresented.toggle() }) {
@@ -176,7 +174,6 @@ struct GoalSelectionView: View {
         }
     }
 
-    // ✅ زر الانتقال للصفحة التالية
     private func nextButton() -> some View {
         Button(action: saveGoal) {
             Text("Next")
@@ -189,25 +186,22 @@ struct GoalSelectionView: View {
         .padding(.top, 30)
     }
 
-    // ✅ دالة حفظ الهدف
     private func saveGoal() {
         guard let selectedGoal = selectedGoal, !name.isEmpty, let imageData = imageData else {
             showGoalSelectionError = true
             return
         }
 
-        let newGoal = Goal(
+        savedGoal = Goal(
             id: CKRecord.ID(recordName: UUID().uuidString),
             name: name,
-            cost: 0.0, // ✅ القيمة الافتراضية
-            salary: 0.0, // ✅ القيمة الافتراضية
-            savingsType: .monthly, // ✅ يمكن تغييره لاحقًا
+            cost: 0.0,
+            salary: 0.0,
+            savingsType: .monthly,
             emoji: selectedGoal,
             goalType: .individual,
             imageData: imageData
         )
-
-        savedGoal = newGoal
 
         DispatchQueue.main.async {
             navigateToSetGoalCost = true
@@ -215,10 +209,32 @@ struct GoalSelectionView: View {
     }
 }
 
-// ✅ مكون لاختيار الصور
+// ✅ Fix: Default Goal Extension
+extension Goal {
+    static func defaultGoal() -> Goal {
+        return Goal(
+            id: CKRecord.ID(recordName: UUID().uuidString),
+            name: "Default Goal",
+            cost: 0.0,
+            salary: 0.0,
+            savingsType: .monthly,
+            emoji: "📌",
+            goalType: .individual,
+            imageData: nil
+        )
+    }
+}
+
+// ✅ Preview
+struct GoalSelectionView_Previews: PreviewProvider {
+    static var previews: some View {
+        GoalSelectionView()
+    }
+}
+
+// ✅ ImagePicker Component
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var imageData: Data?
-    
 
     class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
         let parent: ImagePicker
@@ -248,4 +264,3 @@ struct ImagePicker: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
 }
-

@@ -1,18 +1,19 @@
-//
-//  ProgressSheetView.swift
-//  Cashi
-//
-//  Created by Ghala Alnemari on 12/09/1446 AH.
-//
 import SwiftUI
+import CloudKit
 
 struct ProgressSheetView: View {
     @Environment(\.dismiss) var dismiss
     @State private var amountText: String = ""
+    @State private var showSelectFriendsView = false
+    @State private var acceptedParticipants: [String] = []
+    @State private var currentUserRef: CKRecord.Reference?
+    
+    // ✅ استقبل المستخدم الحالي واسم التحدي من الشاشة السابقة
+    var currentUser: User
+    var challengeName: String
 
     var body: some View {
         ZStack {
-            // خلفية التدرج تغطي كامل الشاشة
             LinearGradient(
                 gradient: Gradient(colors: [Color(hex: "24326D"), Color(hex: "160158")]),
                 startPoint: .top,
@@ -21,14 +22,12 @@ struct ProgressSheetView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 24) {
-                // العنوان
                 Text("Edit Your Progress")
                     .font(.title3)
                     .bold()
                     .foregroundColor(.white)
                     .padding(.top, 16)
 
-                // إدخال المبلغ
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Enter Amount")
                         .foregroundColor(.white)
@@ -43,20 +42,13 @@ struct ProgressSheetView: View {
                 }
                 .padding(.horizontal, 24)
 
-                // عنوان progress
                 Text("Your Friends Progress")
                     .font(.headline)
                     .foregroundColor(.white)
 
-                // قائمة الأصدقاء + زر إضافة
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
-                        ForEach([
-                            ("Ghala", "person.circle.fill", 0.35),
-                            ("Sara", "person.circle.fill", 0.05),
-                            ("Yara", "person.circle.fill", 0.30),
-                            ("Talal", "person.circle.fill", 0.10)
-                        ], id: \.0) { friend in
+                        ForEach(acceptedParticipants, id: \.self) { participant in
                             VStack(spacing: 6) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 40)
@@ -69,28 +61,28 @@ struct ProgressSheetView: View {
                                                 gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.blue]),
                                                 startPoint: .bottom,
                                                 endPoint: .top))
-                                            .frame(width: 80, height: 120 * friend.2)
+                                            .frame(height: 60)
+                                            .clipShape(RoundedRectangle(cornerRadius: 40))
                                     }
                                     .frame(width: 80, height: 120)
-                                    .clipShape(RoundedRectangle(cornerRadius: 40))
 
                                     RoundedRectangle(cornerRadius: 40)
                                         .stroke(Color.blue, lineWidth: 2)
                                         .frame(width: 80, height: 120)
 
                                     VStack(spacing: 4) {
-                                        Image(systemName: friend.1)
+                                        Image(systemName: "person.circle.fill")
                                             .resizable()
                                             .scaledToFit()
                                             .frame(width: 35, height: 35)
                                             .foregroundColor(.white)
 
-                                        Text("\(Int(friend.2 * 100))%")
+                                        Text("50%")
                                             .font(.footnote)
                                             .foregroundColor(.white)
                                     }
                                 }
-                                Text(friend.0)
+                                Text(participant)
                                     .foregroundColor(.white)
                                     .font(.caption)
                             }
@@ -98,19 +90,24 @@ struct ProgressSheetView: View {
 
                         // زر إضافة صديق
                         VStack(spacing: 6) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 40)
-                                    .fill(Color.white.opacity(0.1))
-                                    .frame(width: 80, height: 120)
+                            Button(action: {
+                                showSelectFriendsView = true
+                            }) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 40)
+                                        .fill(Color.white.opacity(0.1))
+                                        .frame(width: 80, height: 120)
 
-                                RoundedRectangle(cornerRadius: 40)
-                                    .stroke(Color.blue, lineWidth: 2)
-                                    .frame(width: 80, height: 120)
+                                    RoundedRectangle(cornerRadius: 40)
+                                        .stroke(Color.blue, lineWidth: 2)
+                                        .frame(width: 80, height: 120)
 
-                                Image(systemName: "plus")
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.blue)
+                                    Image(systemName: "plus")
+                                        .font(.system(size: 28, weight: .bold))
+                                        .foregroundColor(.blue)
+                                }
                             }
+
                             Text("Add Friend")
                                 .foregroundColor(.white)
                                 .font(.caption)
@@ -121,7 +118,6 @@ struct ProgressSheetView: View {
 
                 Spacer()
 
-                // زر نكست أسفل يمين
                 HStack {
                     Spacer()
                     Button(action: {
@@ -139,7 +135,50 @@ struct ProgressSheetView: View {
                     .padding(.bottom, 16)
                 }
             }
-            .frame(maxHeight: .infinity) // هذه النقطة المهمة لتغطية كامل مساحة الشيت
+            .frame(maxHeight: .infinity)
+            .onAppear {
+                fetchAcceptedParticipants()
+            }
+        }
+        // ✅ فتح شاشة اختيار الأصدقاء بدل IncomingRequestsView
+        .fullScreenCover(isPresented: $showSelectFriendsView) {
+            SelectFriendsForChallengeView(
+                currentUser: currentUser,
+                challengeName: challengeName
+            )
+        }
+    }
+
+    func fetchAcceptedParticipants() {
+        guard let currentUserRef = currentUserRef else { return }
+
+        ChallengeJoinRequestManager.shared.fetchIncomingRequests(for: currentUserRef) { requests in
+            let accepted = requests.filter { $0.status == "accepted" }
+
+            var names: [String] = []
+            let group = DispatchGroup()
+
+            for request in accepted {
+                group.enter()
+                let senderRecordID = request.senderID.recordID
+                let recordFetch = CKFetchRecordsOperation(recordIDs: [senderRecordID])
+                recordFetch.perRecordResultBlock = { recordID, result in
+                    switch result {
+                    case .success(let record):
+                        let name = record["name"] as? String ?? "Unknown"
+                        names.append(name)
+                    case .failure(_):
+                        names.append("Unknown")
+                    }
+                    group.leave()
+                }
+
+                CKContainer.default().publicCloudDatabase.add(recordFetch)
+            }
+
+            group.notify(queue: .main) {
+                self.acceptedParticipants = names
+            }
         }
     }
 }

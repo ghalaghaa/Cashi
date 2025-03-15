@@ -1,9 +1,3 @@
-//
-//  IndividualGoalsScrollView.swift
-//  Cashi
-//
-//  Created by Ghala Alnemari on 12/09/1446 AH.
-
 import SwiftUI
 import CloudKit
 
@@ -71,7 +65,7 @@ struct IndividualGoalsScrollView: View {
                                     HStack(spacing: 150) {
                                         Button(action: {
                                             Task {
-                                                await viewModel.updateGoalCollectedAmount(goal: goal, increase: true)
+                                                await updateProgress(for: goal, increase: true)
                                             }
                                         }) {
                                             Image(systemName: "plus.circle.fill")
@@ -82,7 +76,7 @@ struct IndividualGoalsScrollView: View {
 
                                         Button(action: {
                                             Task {
-                                                await viewModel.updateGoalCollectedAmount(goal: goal, increase: false)
+                                                await updateProgress(for: goal, increase: false)
                                             }
                                         }) {
                                             Image(systemName: "minus.circle.fill")
@@ -101,6 +95,7 @@ struct IndividualGoalsScrollView: View {
                                             RoundedRectangle(cornerRadius: 10)
                                                 .fill(Color(hex: "4B7EDA"))
                                                 .frame(width: CGFloat(min(goal.collectedAmount / goal.cost, 1.0)) * geometry.size.width, height: 14)
+                                                .animation(.easeInOut(duration: 0.3), value: goal.collectedAmount)
                                         }
                                     }
                                     .frame(width: 220, height: 14)
@@ -141,5 +136,22 @@ struct IndividualGoalsScrollView: View {
                 .padding(.horizontal)
             }
         }
+    }
+    
+    // ✅ **إصلاح زر التقدم بحيث يعمل بشكل فوري**
+    private func updateProgress(for goal: Goal, increase: Bool) async {
+        let amountChange: Double = 10.0 // تعديل المبلغ الذي يتم إضافته أو إنقاصه
+        var newCollectedAmount = goal.collectedAmount + (increase ? amountChange : -amountChange)
+        newCollectedAmount = max(0, min(newCollectedAmount, goal.cost)) // تأكد أن القيم لا تتعدى الحدود
+
+        // تحديث الواجهة قبل إرسال البيانات لـ CloudKit
+        DispatchQueue.main.async {
+            if let index = viewModel.goals.firstIndex(where: { $0.id == goal.id }) {
+                viewModel.goals[index].collectedAmount = newCollectedAmount
+            }
+        }
+
+        // تحديث القيم على CloudKit
+        await viewModel.updateGoalCollectedAmount(goal: goal, increase: increase)
     }
 }

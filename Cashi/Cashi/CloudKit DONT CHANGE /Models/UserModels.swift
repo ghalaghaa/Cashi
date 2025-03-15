@@ -25,4 +25,5 @@ struct User {
         self.name = name
         self.email = email
     }
+    
 }
