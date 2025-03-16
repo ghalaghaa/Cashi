@@ -18,6 +18,7 @@ struct View3: View {
     @State private var navigateToGoalSelectionView = false
     @State private var selectedGoal: Goal? = nil
     @State private var userName: String = ""
+    @State private var widgetGoal: Goal? = nil
 
     var body: some View {
         NavigationStack {
@@ -65,7 +66,9 @@ struct View3: View {
                                     onAddGoalTapped: {
                                         navigateToGoalSelectionView = true
                                     },
-                                    selectedGoal: $selectedGoal
+                                    selectedGoal: $selectedGoal,
+                                    widgetGoal: $widgetGoal,
+                                    isSelectingGoals: $isSelectingGoals
                                 )
                             } else {
                                 Text("⏳ Loading goals...")

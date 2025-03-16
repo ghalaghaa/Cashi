@@ -221,6 +221,7 @@ class ViewModel2: ObservableObject {
         record["savingsType"] = goal.savingsType.rawValue as CKRecordValue
         record["emoji"] = goal.emoji as CKRecordValue
         record["goalType"] = goal.goalType.rawValue as CKRecordValue
+        record["isWidgetGoal"] = goal.isWidgetGoal ? "true" : "false"
         
         if goal.goalType == .qattah, let participants = goal.participants {
             record["participants"] = participants as CKRecordValue
@@ -312,25 +313,85 @@ class ViewModel2: ObservableObject {
             }
         }
     }
-}
-func generateSavingPointsFromGoals(goals: [Goal]) -> [SavingPoint] {
-            return goals.map { goal in
-                let date = goal.modifiedDate ?? Date() // استخدم التاريخ من السجل أو الآن إذا لم يكن موجودًا
-                return SavingPoint(date: date, amount: goal.collectedAmount)
-            }
+    func setGoalAsWidgetGoal(_ goal: Goal) async {
+        do {
+            let record = try await database.record(for: goal.id)
+            record["isWidgetGoal"] = "true"
+
+            try await database.save(record)
+
+            print("✅ Goal marked as Widget Goal successfully")
+        } catch {
+            print("❌ Failed to set Widget Goal: \(error.localizedDescription)")
         }
-    
-    func generateGroupedSavingPoints(from goals: [Goal], granularity: Calendar.Component) -> [SavingPoint] {
-        let calendar = Calendar.current
-        var grouped: [Date: Double] = [:]
-        
-        for goal in goals {
-            let date = goal.modifiedDate ?? Date()
-            let components = calendar.dateComponents([granularity], from: date)
-            if let groupedDate = calendar.date(from: components) {
-                grouped[groupedDate, default: 0.0] += goal.collectedAmount
-            }
-        }
-        
-        return grouped.map { SavingPoint(date: $0.key, amount: $0.value) }
     }
+    
+    func generateSavingPointsFromGoals(goals: [Goal]) -> [SavingPoint] {
+                return goals.map { goal in
+                    let date = goal.modifiedDate ?? Date() // استخدم التاريخ من السجل أو الآن إذا لم يكن موجودًا
+                    return SavingPoint(date: date, amount: goal.collectedAmount)
+                }
+            }
+        
+        func generateGroupedSavingPoints(from goals: [Goal], granularity: Calendar.Component) -> [SavingPoint] {
+            let calendar = Calendar.current
+            var grouped: [Date: Double] = [:]
+            
+            for goal in goals {
+                let date = goal.modifiedDate ?? Date()
+                let components = calendar.dateComponents([granularity], from: date)
+                if let groupedDate = calendar.date(from: components) {
+                    grouped[groupedDate, default: 0.0] += goal.collectedAmount
+                }
+            }
+            
+            return grouped.map { SavingPoint(date: $0.key, amount: $0.value) }
+        }
+    func resetAllWidgetGoals(except goalID: CKRecord.ID) async {
+        for index in self.goals.indices {
+            if self.goals[index].id != goalID {
+                self.goals[index].isWidgetGoal = false
+            }
+        }
+
+        let recordsToUpdate = goals.filter { $0.id != goalID }.map { goal -> CKRecord in
+            let record = CKRecord(recordType: "Goal", recordID: goal.id)
+            record["isWidgetGoal"] = "false" as CKRecordValue
+            return record
+        }
+
+        do {
+            for record in recordsToUpdate {
+                try await database.save(record)
+            }
+            print("✅ Reset all other widget goals.")
+        } catch {
+            print("❌ Failed to reset widget goals: \(error.localizedDescription)")
+        }
+    }
+
+}
+
+//
+//func generateSavingPointsFromGoals(goals: [Goal]) -> [SavingPoint] {
+//            return goals.map { goal in
+//                let date = goal.modifiedDate ?? Date() // استخدم التاريخ من السجل أو الآن إذا لم يكن موجودًا
+//                return SavingPoint(date: date, amount: goal.collectedAmount)
+//            }
+//        }
+//    
+//    func generateGroupedSavingPoints(from goals: [Goal], granularity: Calendar.Component) -> [SavingPoint] {
+//        let calendar = Calendar.current
+//        var grouped: [Date: Double] = [:]
+//        
+//        for goal in goals {
+//            let date = goal.modifiedDate ?? Date()
+//            let components = calendar.dateComponents([granularity], from: date)
+//            if let groupedDate = calendar.date(from: components) {
+//                grouped[groupedDate, default: 0.0] += goal.collectedAmount
+//            }
+//        }
+//        
+//        return grouped.map { SavingPoint(date: $0.key, amount: $0.value) }
+//    }
+//

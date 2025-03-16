@@ -190,7 +190,7 @@ class GoalWidgetManager {
     lazy var database = container.publicCloudDatabase
 
     func fetchLatestIndividualGoal(completion: @escaping (String, Double, String) -> Void) {
-        let predicate = NSPredicate(format: "goalType == %@", "individual")
+        let predicate = NSPredicate(format: "goalType == %@ AND isWidgetGoal == %@", "individual", "true")
         let query = CKQuery(recordType: "Goal", predicate: predicate)
 
         database.perform(query, inZoneWith: nil) { results, error in

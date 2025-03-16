@@ -125,6 +125,6 @@ struct QattahGoalsView: View {
     }
 }
 
-#Preview {
-    View3()
-}
+//#Preview {
+//    View3()
+//}

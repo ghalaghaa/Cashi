@@ -13,6 +13,8 @@ struct Goal:Identifiable,Equatable {
     var participants: Int? // ✅ عدد المشاركين في Qattah فقط
     var collectedAmount: Double // ✅ تتبع المبلغ المجمع
     var modifiedDate: Date?
+    var isWidgetGoal: Bool = false
+    
     
     
     enum SavingsType: String, CaseIterable {
@@ -44,6 +46,7 @@ struct Goal:Identifiable,Equatable {
               let savingsTypeRaw = record["savingsType"] as? String,
               let savingsType = SavingsType(rawValue: savingsTypeRaw),
               let emoji = record["emoji"] as? String,
+              
               let cost = record["cost"] as? Double,
 //              let collectedAmount = record["collectedAmount"] as? Double, // ✅ استرجاع المبلغ المجمع
 //              let salary = record["salary"] as? Double, // ✅ تأكد من استرجاع الراتب
@@ -63,6 +66,7 @@ struct Goal:Identifiable,Equatable {
         self.emoji = emoji
         self.goalType = goalType
         self.imageData = nil
+        self.isWidgetGoal = (record["isWidgetGoal"] as? String) == "true"
 
         if let asset = record["imageData"] as? CKAsset, let fileURL = asset.fileURL {
             do {
@@ -83,7 +87,8 @@ struct Goal:Identifiable,Equatable {
         record["savingsType"] = savingsType.rawValue as CKRecordValue
         record["emoji"] = emoji as CKRecordValue
         record["goalType"] = goalType.rawValue as CKRecordValue
-
+        record["isWidgetGoal"] = isWidgetGoal ? "true" : "false"
+        
         if let imageData = imageData, let fileURL = saveImageToTemporaryURL(data: imageData) {
             record["imageData"] = CKAsset(fileURL: fileURL)
         }
