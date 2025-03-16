@@ -49,18 +49,31 @@ class ViewModel2: ObservableObject {
     }
     
     func fetchGoals() async {
-        let query = CKQuery(recordType: "Goal", predicate: NSPredicate(value: true))
+        guard let currentUser = self.user else {
+            print("⚠️ No current user found")
+            return
+        }
+
+        // ✅ جلب الأهداف المرتبطة بالمستخدم الحالي فقط عن طريق حقل show (الذي يحوي CKReference للمستخدم)
+        let predicate = NSPredicate(format: "show == %@", currentUser.id)
+        let query = CKQuery(recordType: "Goal", predicate: predicate)
+
         do {
             let results = try await database.perform(query, inZoneWith: nil)
             let newGoals = results.compactMap { Goal(record: $0) }
             
+            print("✅ All fetched goals for user \(currentUser.name):")
+            for goal in newGoals {
+                print("📝 Goal: \(goal.name), OwnerID: \(goal.ownerID?.recordName ?? "nil")")
+            }
+
             DispatchQueue.main.async {
                 self.goals = newGoals
                 self.qattahGoals = newGoals.filter { $0.goalType == .qattah }
                 self.challengeGoals = newGoals.filter { $0.goalType == .challenge }
                 self.individualGoals = newGoals.filter { $0.goalType == .individual }
             }
-            
+
             print("✅ Successfully fetched \(newGoals.count) goals.")
         } catch {
             DispatchQueue.main.async {
@@ -69,6 +82,7 @@ class ViewModel2: ObservableObject {
             print(self.error!)
         }
     }
+
     func calculateSavingsForGoal(goal: Goal, savingRate: Double) -> (savingsPerMonth: Double, duration: Int) {
         guard goal.cost > 0, savingRate > 0 else { return (0, 0) }
         
@@ -232,7 +246,14 @@ class ViewModel2: ObservableObject {
                    record["imageData"] = asset
                }
            }
-
+        if let currentUser = self.user {
+            let reference = CKRecord.Reference(recordID: currentUser.id, action: .none)
+            record["show"] = reference // ✅ هذا هو الحقل المرتبط بالمستخدم الحالي
+        }
+        
+        
+        
+        
         return await withCheckedContinuation { continuation in
             let modifyOperation = CKModifyRecordsOperation(recordsToSave: [record], recordIDsToDelete: nil)
             modifyOperation.savePolicy = .changedKeys // ✅ يسمح بالتحديث إذا كان موجود
@@ -243,11 +264,42 @@ class ViewModel2: ObservableObject {
                         continuation.resume(returning: false)
                     } else {
                         print("✅ Goal saved successfully: \(goal.name)")
-                        continuation.resume(returning: true)
-                    }
+
+                        // ✅ بعد الحفظ، اربط الهدف بحقل show للمستخدم
+                        if let currentUser = self.user {
+                            Task {
+                                await self.addGoalToUserShowList(goal: goal, user: currentUser)
+                            }
+                        }
+
+                        continuation.resume(returning: true)                    }
                 }
             }
             database.add(modifyOperation)
+        }
+    }
+    
+    
+    
+    
+    func addGoalToUserShowList(goal: Goal, user: User) async {
+        do {
+            let userRecord = try await database.record(for: user.id)
+
+            var currentGoals = userRecord["show"] as? [CKRecord.Reference] ?? []
+            let newGoalReference = CKRecord.Reference(recordID: goal.id, action: .none)
+
+            if !currentGoals.contains(where: { $0.recordID == goal.id }) {
+                currentGoals.append(newGoalReference)
+                userRecord["show"] = currentGoals
+                try await database.save(userRecord)
+                print("✅ Goal added to user's show list")
+            } else {
+                print("🔁 Goal already exists in user's show list")
+            }
+
+        } catch {
+            print("❌ Failed to add goal reference to user: \(error.localizedDescription)")
         }
     }
     

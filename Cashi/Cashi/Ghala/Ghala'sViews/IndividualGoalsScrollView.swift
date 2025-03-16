@@ -20,7 +20,7 @@ struct IndividualGoalsScrollView: View {
         VStack(alignment: .leading) {
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 16) {
-                    ForEach(viewModel.goals.filter { $0.goalType == .individual }, id: \.id) { goal in
+                    ForEach(viewModel.goals.filter { $0.goalType == .individual && $0.ownerID == viewModel.user?.id }, id: \.id) { goal in
                         ZStack(alignment: .topLeading) {
                             if isSelectingGoals && selectedGoal?.id == goal.id {
                                 Image(systemName: "checkmark.circle.fill")

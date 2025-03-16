@@ -14,7 +14,7 @@ struct Goal:Identifiable,Equatable {
     var collectedAmount: Double // ✅ تتبع المبلغ المجمع
     var modifiedDate: Date?
     var isWidgetGoal: Bool = false
-    
+    var ownerID: CKRecord.ID? // لربط الهدف بصاحب الحساب
     
     
     enum SavingsType: String, CaseIterable {
@@ -37,6 +37,7 @@ struct Goal:Identifiable,Equatable {
         self.imageData = imageData
 //        self.participants = nil
         self.collectedAmount = collectedAmount
+        
 
     }
 
@@ -75,6 +76,9 @@ struct Goal:Identifiable,Equatable {
                 print("⚠️ Failed to load image data: \(error.localizedDescription)")
             }
         }
+        if let showReference = record["show"] as? CKRecord.Reference {
+            self.ownerID = showReference.recordID
+        }
         
     }
     // ✅ *تحويل Goal إلى CKRecord للحفظ في CloudKit*
@@ -92,6 +96,10 @@ struct Goal:Identifiable,Equatable {
         if let imageData = imageData, let fileURL = saveImageToTemporaryURL(data: imageData) {
             record["imageData"] = CKAsset(fileURL: fileURL)
         }
+        
+        if let ownerID = ownerID {
+               record["show"] = CKRecord.Reference(recordID: ownerID, action: .none)
+           }
         return record
     }
 
