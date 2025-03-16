@@ -118,6 +118,9 @@ struct CashiWidgetEntryView: View {
                         .frame(width: 70, height: 70)
                         .rotationEffect(.degrees(-90))
                         .animation(.easeInOut(duration: 0.3), value: safeProgress)
+                        
+                        
+                    Text(entry.goalEmoji)
                         .font(.system(size: 22))
                 }
                 .padding(.vertical, 5)
