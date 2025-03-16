@@ -16,9 +16,25 @@ class WelcomeGoalsViewModel: ObservableObject {
     @Published var isIncomeValid: Bool = false
     @Published var isSaved: Bool = false
     @Published var showiCloudAlert: Bool = false
+    @Published var isUsernameTaken: Bool = false
+    @Published var usernameValidationMessage: String = ""
 
     func validateName() {
         isNameValid = !name.isEmpty
+        guard isNameValid else {
+            isUsernameTaken = false
+            return
+        }
+        
+        // تحقق من تكرار الاسم
+        isUsernameUnique(name) { isUnique in
+            self.isUsernameTaken = !isUnique
+            if self.isUsernameTaken {
+                self.usernameValidationMessage = "⚠️ Username already taken. Please choose another one."
+            } else {
+                self.usernameValidationMessage = ""
+            }
+        }
     }
 
     func validateIncome() {
@@ -46,49 +62,53 @@ class WelcomeGoalsViewModel: ObservableObject {
             }
         }
     }
-
-    // حفظ أو تحديث السجل بناءً على الإيميل فقط
-    func saveToCloudKit(appleEmail: String) {
+    func isUsernameUnique(_ username: String, completion: @escaping (Bool) -> Void) {
         let container = CKContainer(identifier: "iCloud.CashiBackup")
         let publicDB = container.publicCloudDatabase
 
-        let predicate = NSPredicate(format: "email == %@", appleEmail)
+        let predicate = NSPredicate(format: "name == %@", username)
         let query = CKQuery(recordType: "ADDUsers", predicate: predicate)
 
-        publicDB.perform(query, inZoneWith: nil) { records, error in
+        publicDB.perform(query, inZoneWith: nil) { results, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    print("❌ Error: \(error.localizedDescription)")
-                    return
-                }
-
-                if let record = records?.first {
-                    // تحديث السجل الحالي
-                    record["name"] = self.name
-                    record["income"] = self.income
-
-                    publicDB.save(record) { _, error in
-                        DispatchQueue.main.async {
-                            self.isSaved = (error == nil)
-                        }
-                    }
+                    print("❌ Error checking uniqueness: \(error.localizedDescription)")
+                    completion(false)
                 } else {
-                    // إنشاء سجل جديد
-                    let newRecord = CKRecord(recordType: "ADDUsers")
-                    newRecord["name"] = self.name
-                    newRecord["income"] = self.income
-                    newRecord["email"] = appleEmail
-
-                    publicDB.save(newRecord) { _, error in
-                        DispatchQueue.main.async {
-                            self.isSaved = (error == nil)
-                        }
-                    }
+                    let isUnique = results?.isEmpty ?? true
+                    completion(isUnique)
                 }
             }
         }
     }
-}
+    
+    
+    // حفظ أو تحديث السجل بناءً على الإيميل فقط
+    func saveToCloudKit(appleEmail: String) {
+        isUsernameUnique(name) { isUnique in
+            if isUnique {
+                let container = CKContainer(identifier: "iCloud.CashiBackup")
+                let record = CKRecord(recordType: "ADDUsers")
+                record["name"] = self.name
+                record["income"] = self.income
+                record["email"] = appleEmail
+
+                container.publicCloudDatabase.save(record) { _, error in
+                    DispatchQueue.main.async {
+                        if let error = error {
+                            print("❌ Error saving user: \(error.localizedDescription)")
+                        } else {
+                            print("✅ User saved successfully.")
+                            self.isSaved = true
+                        }
+                    }
+                }
+            } else {
+                print("⚠️ Username already taken. Please choose another one.")
+                // يمكنك هنا عرض Alert أو رسالة للمستخدم
+            }
+        }
+    }}
 // MARK: - View
 struct GoalsW: View {
     var appleEmail: String
@@ -128,14 +148,17 @@ struct GoalsW: View {
                                     RoundedRectangle(cornerRadius: 5)
                                         .stroke(Color(red: 0.24, green: 0.43, blue: 0.78), lineWidth: 0.7)
                                 )
+                            
                                 .onChange(of: viewModel.name) { _ in
                                     viewModel.validateName()
                                 }
 
-                            if viewModel.isNameValid {
-                                Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
-                            } else if viewModel.name.isEmpty {
+                            if viewModel.name.isEmpty {
                                 Image(systemName: "xmark.circle.fill").foregroundColor(.red)
+                            } else if viewModel.isUsernameTaken {
+                                Image(systemName: "xmark.circle.fill").foregroundColor(.red)
+                            } else if viewModel.isNameValid {
+                                Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
                             }
                         }.padding(.trailing, 10)
                     }
