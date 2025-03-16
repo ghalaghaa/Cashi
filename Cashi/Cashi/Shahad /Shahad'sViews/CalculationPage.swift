@@ -38,17 +38,27 @@ struct CalculationPage: View {
                 VStack(spacing: 15) {
                     inputField(title: "Your \(savingsType.rawValue.capitalized) Payment", value: String(format: "%.2f $", savingsPerPeriod))
                         .overlay(editButton())
-
+                    
                     inputField(title: "Time Needed to Reach Your Goal", value: "\(duration) \(savingsType.rawValue.lowercased())s")
                         .overlay(editButton())
                 }
                 .frame(width: 380, height: 220)
                 .background(RoundedRectangle(cornerRadius: 30).fill(Color(hex: "1C215B")))
                 .padding(.horizontal)
-
-                savingsRateSlider()
                 
-                nextButton() // ✅ Added Next Button to navigate to View3
+                savingsRateSlider()
+                nextButton()
+
+                // ✅ NavigationLink داخل VStack وليس background
+                NavigationLink(destination: View3(), isActive: $navigateToView3) {
+                    EmptyView()
+                }
+                .hidden()
+
+                NavigationLink(destination: SetGoalCostView(goal: $goal, user: user), isActive: $navigateToEdit) {
+                    EmptyView()
+                }
+                .hidden()
             }
         }
         .onAppear {
@@ -57,22 +67,7 @@ struct CalculationPage: View {
         .onChange(of: savingRate) { _ in
             calculateSavings()
         }
-        .background(
-            NavigationLink(
-                destination: SetGoalCostView(goal: $goal, user: user),
-                isActive: $navigateToEdit
-            ) { EmptyView() }
-            .hidden()
-        )
-        .background(
-        NavigationLink(
-                destination: View3(), // ✅ Navigate to View3
-                isActive: $navigateToView3
-            ) { EmptyView() }
-            .hidden()
-        )
     }
-
     // 🔹 **Header View**
     private func headerView() -> some View {
         HStack {
@@ -156,6 +151,8 @@ struct CalculationPage: View {
         }
         .padding(.top, 20)
     }
+    
+    
 
     // 🔹 **Save Goal and Navigate to View3**
     private func saveGoalAndNavigate() {

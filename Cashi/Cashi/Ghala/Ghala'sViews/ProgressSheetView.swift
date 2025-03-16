@@ -1,3 +1,10 @@
+//
+//  ChallengeGoalsView.swift
+//  Cashi
+//
+//  Created by Ghala Alnemari on 12/09/1446 AH.
+//
+
 import SwiftUI
 import CloudKit
 
@@ -142,10 +149,12 @@ struct ProgressSheetView: View {
         }
         // ✅ فتح شاشة اختيار الأصدقاء بدل IncomingRequestsView
         .fullScreenCover(isPresented: $showSelectFriendsView) {
-            SelectFriendsForChallengeView(
-                currentUser: currentUser,
-                challengeName: challengeName
-            )
+//            SelectFriendsForChallengeView(
+//                currentUser: currentUser,
+//                challengeName: challengeName
+            ADFriendsView()
+
+            
         }
     }
 

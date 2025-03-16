@@ -66,11 +66,11 @@ struct ADFriendsView: View {
                     ADFriendRow(friend: friend, deleteAction: { viewModel.deleteFriend(friend: friend) })
                 }
 
-                Text("Challenge Requests")
-                    .foregroundColor(.white)
-                    .font(.system(size: 18, weight: .semibold))
-                    .padding(.top, 20)
-                    .padding(.horizontal)
+//                Text("Challenge Requests")
+//                    .foregroundColor(.white)
+//                    .font(.system(size: 18, weight: .semibold))
+//                    .padding(.top, 20)
+//                    .padding(.horizontal)
 
 //                ForEach(viewModel.challengeRequests) { challenge in
 //                    ADChallengeRequestRow(challenge: challenge, acceptAction: { viewModel.acceptChallengeRequest(challenge: challenge) }, declineAction: { viewModel.declineChallengeRequest(challenge: challenge) })
@@ -135,3 +135,10 @@ struct ADFriendRow: View {
             Image(systemName: "person.crop.circle")
             
         }}}
+
+
+#Preview {
+    ADFriendsView()
+}
+
+

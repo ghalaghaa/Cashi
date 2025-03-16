@@ -1,6 +1,8 @@
 //
-//  CloudKitUserView.swift
+//  LogInView.swift
 //  Cashi
+//
+//  Created by Ghala Alnemari on 16/03/1446 AH.
 //
 
 import SwiftUI

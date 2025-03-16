@@ -214,7 +214,7 @@ class ViewModel2: ObservableObject {
     
     func saveGoal(goal: Goal) async -> Bool {
         let record = CKRecord(recordType: "Goal", recordID: goal.id)
-        
+
         record["name"] = goal.name as CKRecordValue
         record["cost"] = goal.cost as CKRecordValue
         record["salary"] = goal.salary as CKRecordValue
@@ -222,20 +222,36 @@ class ViewModel2: ObservableObject {
         record["emoji"] = goal.emoji as CKRecordValue
         record["goalType"] = goal.goalType.rawValue as CKRecordValue
         record["isWidgetGoal"] = goal.isWidgetGoal ? "true" : "false"
-        
+
         if goal.goalType == .qattah, let participants = goal.participants {
             record["participants"] = participants as CKRecordValue
         }
         
-        do {
-            try await database.save(record)
-            print("✅ Goal saved successfully: \(goal.name)")
-            return true
-        } catch {
-            print("⚠️ Failed to save goal: \(error.localizedDescription)")
-            return false
+        if let imageData = goal.imageData {
+               if let asset = createAsset(from: imageData) {
+                   record["imageData"] = asset
+               }
+           }
+
+        return await withCheckedContinuation { continuation in
+            let modifyOperation = CKModifyRecordsOperation(recordsToSave: [record], recordIDsToDelete: nil)
+            modifyOperation.savePolicy = .changedKeys // ✅ يسمح بالتحديث إذا كان موجود
+            modifyOperation.modifyRecordsCompletionBlock = { savedRecords, _, error in
+                DispatchQueue.main.async {
+                    if let error = error {
+                        print("⚠️ Failed to save goal: \(error.localizedDescription)")
+                        continuation.resume(returning: false)
+                    } else {
+                        print("✅ Goal saved successfully: \(goal.name)")
+                        continuation.resume(returning: true)
+                    }
+                }
+            }
+            database.add(modifyOperation)
         }
     }
+    
+    
     
     func saveCalculation(goal: Goal, cost: Double?, salary: Double?, savingsType: Goal.SavingsType?, savingsRequired: Double, completion: ((Bool) -> Void)? = nil) async {
         let safeCost = cost ?? 0.0
@@ -367,6 +383,18 @@ class ViewModel2: ObservableObject {
             print("✅ Reset all other widget goals.")
         } catch {
             print("❌ Failed to reset widget goals: \(error.localizedDescription)")
+        }
+    }
+    
+    func createAsset(from data: Data) -> CKAsset? {
+        let tempDirectory = FileManager.default.temporaryDirectory
+        let fileURL = tempDirectory.appendingPathComponent(UUID().uuidString).appendingPathExtension("jpg")
+        do {
+            try data.write(to: fileURL, options: .atomic)
+            return CKAsset(fileURL: fileURL)
+        } catch {
+            print("❌ Failed to create CKAsset: \(error.localizedDescription)")
+            return nil
         }
     }
 

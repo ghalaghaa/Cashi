@@ -1,92 +1,90 @@
+//
+//  LogInView.swift
+//  Cashi
+//
+//  Created by Ghala Alnemari on 16/03/1446 AH.
+//
+
 import SwiftUI
-import CloudKit
 import AuthenticationServices
 
 struct LogInView: View {
-    @StateObject private var viewModel = LogInViewModel()
+    @State private var isActive = false
+    @State private var appleEmail: String = ""
 
     var body: some View {
-        if viewModel.isActive {
-            CloudKitUserView()
+        if isActive {
+            // ✅ عند تسجيل الدخول بنجاح، انتقل إلى GoalsW مع تمرير البريد الإلكتروني
+            GoalsW(appleEmail: appleEmail)
         } else {
             ZStack {
-                LinearGradient(gradient: Gradient(colors: [Color(red: 0.1, green: 0.1, blue: 0.3), Color(red: 0.2, green: 0.2, blue: 0.5)]), startPoint: .top, endPoint: .bottom)
-                    .edgesIgnoringSafeArea(.all)
+                // ✅ خلفية متدرجة
+                LinearGradient(
+                    stops: [
+                        Gradient.Stop(color: Color(red: 0.12, green: 0, blue: 0.47), location: 0.10),
+                        Gradient.Stop(color: Color(red: 0.09, green: 0, blue: 0.35), location: 0.45),
+                        Gradient.Stop(color: Color(red: 0.05, green: 0, blue: 0.22), location: 1.00),
+                    ],
+                    startPoint: UnitPoint(x: -0.05, y: 0.07),
+                    endPoint: UnitPoint(x: 0.17, y: 0.22)
+                )
+                .ignoresSafeArea()
+
                 VStack {
+                    // ✅ شعار التطبيق
                     Image("logo")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 80, height: 80)
-                        .foregroundColor(.white)
                         .padding(.top, 300)
 
-                    Text("Log in to cashi")
+                    // ✅ عنوان الشاشة
+                    Text("Log in to Cashi")
                         .font(.title2)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
-                        .padding(.top, -10)
 
+                    // ✅ زر تسجيل الدخول باستخدام Apple
                     SignInWithAppleButton(
                         .signIn,
                         onRequest: { request in
-                            request.requestedScopes = [.fullName, .email]
-                            request.nonce = UUID().uuidString
-                            request.state = UUID().uuidString
+                            request.requestedScopes = [.email]
                         },
                         onCompletion: { result in
                             switch result {
                             case .success(let authResults):
-                                if let credential = authResults.credential as? ASAuthorizationAppleIDCredential {
-                                    viewModel.handleSignInWithApple(credential: credential)
-                                } else {
-                                    viewModel.errorMessage = "Failed to get Apple ID credential."
-                                }
+                                handleAppleSignIn(result: authResults)
                             case .failure(let error):
-                                viewModel.errorMessage = "Sign in with Apple failed: \(error.localizedDescription)"
+                                print("❌ Sign in failed: \(error.localizedDescription)")
                             }
                         }
                     )
-                    .signInWithAppleButtonStyle(.white)
-                    .frame(width: 325, height: 51)
+                    .signInWithAppleButtonStyle(.whiteOutline)
+                    .frame(height: 50)
                     .cornerRadius(50)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 50)
-                            .inset(by: 0.35)
-                            .stroke(Color(red: 0.1, green: 0.4, blue: 0.78), lineWidth: 0.7)
-                    )
-                    .padding(.top, 20)
-
-                    if let errorMessage = viewModel.errorMessage {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                            .padding()
-                    }
-
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .padding(.top, 20)
-                    }
+                    .padding(.horizontal)
 
                     Spacer()
                 }
-                .frame(width: 400, height: 845)
-                .background(
-                    LinearGradient(
-                        stops: [
-                            Gradient.Stop(color: Color(red: 0.1, green: 0.42, blue: 0.57), location: 0.00),
-                            Gradient.Stop(color: Color(red: 0.1, green: 0, blue: 0.35), location: 0.1),
-                        ],
-                        startPoint: UnitPoint(x: 0.5, y: 0),
-                        endPoint: UnitPoint(x: 0.4, y: 1)
-                    )
-                )
+                .frame(width: 400, height: 844)
                 .cornerRadius(30)
             }
         }
     }
-}
 
-#Preview {
-    LogInView()
+    // ✅ دالة التعامل مع تسجيل الدخول عبر Apple
+    func handleAppleSignIn(result: ASAuthorization) {
+        guard let appleIDCredential = result.credential as? ASAuthorizationAppleIDCredential else { return }
+
+        // ✅ الحصول على البريد الإلكتروني
+        if let email = appleIDCredential.email {
+            appleEmail = email
+        } else {
+            // لو كان المستخدم مسجل من قبل فلن تحصل على الإيميل مرة أخرى
+            appleEmail = "Unknown"
+        }
+
+        // ✅ الانتقال إلى الشاشة التالية
+        isActive = true
+    }
 }
