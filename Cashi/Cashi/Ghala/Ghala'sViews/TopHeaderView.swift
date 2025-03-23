@@ -18,13 +18,14 @@ struct TopHeaderView: View {
             HStack {
                 Image(systemName: "person.circle")
                     .resizable()
-                    .frame(width: 40, height: 40)
-                    .foregroundColor(.white)
+                    .frame(width: 35, height: 35)
+                    .foregroundColor(.blue)
+
 
                 Text("Hi, \(userName.isEmpty ? "جاري جلب البيانات..." : userName)")
                     .foregroundColor(.white)
                     .font(.headline)
-
+                  
                 Spacer()
 
                 Image(systemName: "plus.circle.fill")

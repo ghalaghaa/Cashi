@@ -88,16 +88,16 @@ struct GoalSelectionView: View {
         HStack {
             Image(systemName: "person.circle")
                 .resizable()
-                .frame(width: 40, height: 40)
-                .foregroundColor(.white)
+                .frame(width: 35, height: 35)
+                .foregroundColor(.blue)
 
-            Text("Good evening, \(viewModel.user?.name ?? "Guest")")
+            Text("Hi, \(viewModel.user?.name ?? "Guest")")
                 .foregroundColor(.white)
                 .font(.headline)
 
             Spacer()
         }
-        .padding(.horizontal)
+        .padding(.leading, 40)
         .padding(.top, 50)
     }
 
@@ -105,28 +105,36 @@ struct GoalSelectionView: View {
         VStack(spacing: 20) {
             Text("Choose your Goal")
                 .foregroundColor(.white)
-                .font(.title2)
-                .fontWeight(.semibold)
+                .font(.title3)
+                .fontWeight(.regular)
+//                .padding(.top, 90)
+                .padding(.leading, -180)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
+                HStack{
                     ForEach(goals, id: \.self) { goal in
                         Text(goal)
                             .font(.largeTitle)
                             .padding(20)
                             .background(
                                 Circle()
-                                    .fill(selectedGoal == goal ? Color.blue.opacity(0.7) : Color.clear)
-                                    .overlay(
-                                        Circle().stroke(Color.white, lineWidth: selectedGoal == goal ? 3 : 0)
-                                    )
-                            )
+                                                                  .fill(Color.blue.opacity(0.2)) // ✅ Dark blue fill for all circles
+                                                                  .overlay(
+                                                                      Circle()
+                                                                          .fill(selectedGoal == goal ? Color.blue.opacity(0.4) : Color.clear) // ✅ Lighter fill when selected
+                                                                  )
+                                                                  .overlay(
+                                                                      Circle()
+                                                                          .stroke(Color.white, lineWidth: selectedGoal == goal ? 1 : 0) // ✅ White border when selected
+                                                                  )
+                                                          )
                             .onTapGesture {
                                 selectedGoal = goal
                             }
                     }
                 }
                 .padding(.horizontal)
+//                .padding(.bottom, 2)
             }
 
             goalNameTextField()
@@ -144,12 +152,26 @@ struct GoalSelectionView: View {
     }
 
     private func goalNameTextField() -> some View {
-        TextField("Type your Goal", text: $name)
-            .padding()
-            .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.1)))
-            .foregroundColor(.white)
-            .accentColor(.white)
-            .padding(.horizontal)
+        VStack(alignment: .leading) {
+            Text("Type your Goal")
+                .foregroundColor(.white)
+                .font(.headline)
+
+            TextField("Type your Goal", text: $name)
+                .padding()
+                .foregroundColor(Color.blue.opacity(1))
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.blue.opacity(0.0))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.blue.opacity(0.5), lineWidth: 1)
+                )
+                .accentColor(.white)
+                .padding(.top, 5)
+        }
+        .padding(.horizontal)
     }
 
     private func imagePickerView() -> some View {
@@ -158,16 +180,25 @@ struct GoalSelectionView: View {
                 if let imageData = imageData, let uiImage = UIImage(data: imageData) {
                     Image(uiImage: uiImage)
                         .resizable()
+                        .cornerRadius(15)
                         .scaledToFit()
-                        .frame(width: 100, height: 100)
-                        .clipShape(Circle())
+                        
+                        .frame(width: 300, height: 300)
+                        .clipShape(Rectangle())
+//                        .padding(.bottom, 200)
                 } else {
                     ZStack {
-                        Circle().fill(Color.white.opacity(0.1)).frame(width: 60, height: 60)
+                        Text("Upload the image")
+                            .foregroundColor(Color.white)
+                            .padding(.bottom, 190)
+                            .padding(.leading, -190)
+                            
+                        Circle().fill(Color.blue).frame(width: 60, height: 60)
                         Image(systemName: "plus").font(.title).foregroundColor(.white)
                     }
                 }
             }
+//            .padding(.bottom, 100)
             .sheet(isPresented: $isImagePickerPresented) {
                 ImagePicker(imageData: $imageData)
             }
@@ -184,6 +215,7 @@ struct GoalSelectionView: View {
                 .cornerRadius(25)
         }
         .padding(.top, 30)
+        .padding(.leading,200)
     }
 
     private func saveGoal() {
@@ -196,7 +228,7 @@ struct GoalSelectionView: View {
             id: CKRecord.ID(recordName: UUID().uuidString),
             name: name,
             cost: 0.0,
-            salary: 0.0,
+            salary: viewModel.user?.salary ?? 0.0, // ✅ add this
             savingsType: .monthly,
             emoji: selectedGoal,
             goalType: .individual,

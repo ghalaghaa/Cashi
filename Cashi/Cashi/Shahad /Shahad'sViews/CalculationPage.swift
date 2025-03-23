@@ -4,7 +4,7 @@ import Foundation
 
 struct CalculationPage: View {
     let user: User
-    @Binding var goal: Goal // ✅ Use Binding so it updates correctly
+    @Binding var goal: Goal
     let cost: Double
     let salary: Double
     let savingsType: Goal.SavingsType
@@ -13,80 +13,74 @@ struct CalculationPage: View {
     @State private var savingsPerPeriod: Double = 0
     @State private var duration: Int = 0
     @State private var navigateToEdit = false
-    @State private var navigateToView3 = false // ✅ Added navigation to View3
-    @State private var savingRate: Double = 0.2 // ✅ Default savings rate (20%)
+    @State private var navigateToView3 = false
+    @State private var savingRate: Double = 0.2
 
     @Environment(\.presentationMode) var presentationMode
 
-    init(user: User, goal: Binding<Goal>, cost: Double, salary: Double, savingsType: Goal.SavingsType) {
+    init(user: User, goal: Binding<Goal>, cost: Double, savingsType: Goal.SavingsType) {
         self.user = user
         self._goal = goal
         self.cost = cost
-        self.salary = salary
         self.savingsType = savingsType
-
-        _viewModel = StateObject(wrappedValue: ViewModel2(user: user)) // ✅ Pass correct user
+        self.salary = goal.wrappedValue.salary // ✅ fix here
+        _viewModel = StateObject(wrappedValue: ViewModel2(user: user))
     }
-
     var body: some View {
-        ZStack {
-            backgroundGradient()
-            
-            VStack(spacing: 15) {
-                headerView()
-                
-                VStack(spacing: 15) {
-                    inputField(title: "Your \(savingsType.rawValue.capitalized) Payment", value: String(format: "%.2f $", savingsPerPeriod))
-                        .overlay(editButton())
-                    
-                    inputField(title: "Time Needed to Reach Your Goal", value: "\(duration) \(savingsType.rawValue.lowercased())s")
-                        .overlay(editButton())
-                }
-                .frame(width: 380, height: 220)
-                .background(RoundedRectangle(cornerRadius: 30).fill(Color(hex: "1C215B")))
-                .padding(.horizontal)
-                
-                savingsRateSlider()
-                nextButton()
+        NavigationStack {
+            ZStack {
+                backgroundGradient()
 
-                // ✅ NavigationLink داخل VStack وليس background
-                NavigationLink(destination: View3(), isActive: $navigateToView3) {
-                    EmptyView()
-                }
-                .hidden()
+                VStack(spacing: 25) {
+                    headerView()
 
-                NavigationLink(destination: SetGoalCostView(goal: $goal, user: user), isActive: $navigateToEdit) {
-                    EmptyView()
+                    VStack(spacing: 20) {
+                        inputField(title: "Your \(savingsType.rawValue.capitalized) Payment", value: String(format: "%.2f $", savingsPerPeriod))
+                        inputField(title: "Time Needed to Reach Your Goal", value: "\(duration) \(savingsType.rawValue.lowercased())s")
+                        savingsRateSlider()
+                    }
+                    .frame(width: 400, height: 500)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color(hex: "243470"), Color(hex: "1C215B"), Color(hex: "120248")]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomLeading
+                        )
+                        .cornerRadius(30)
+                    )
+                    .padding(.horizontal, 20)
+                    .padding(.top, 40)
+
+                    Spacer()
+
+                    HStack {
+                        Spacer()
+                        nextButton()
+                            .padding(.bottom, 20)
+                            .padding(.trailing, 20)
+                    }
                 }
-                .hidden()
             }
-        }
-        .onAppear {
-            calculateSavings()
-        }
-        .onChange(of: savingRate) { _ in
-            calculateSavings()
-        }
-    }
-    // 🔹 **Header View**
-    private func headerView() -> some View {
-        HStack {
-            Image(systemName: "person.circle")
-                .resizable()
-                .frame(width: 40, height: 40)
-                .foregroundColor(.white)
+            .navigationBarHidden(true)
+            .navigationBarBackButtonHidden(true)
+            .onAppear {
+                calculateSavings()
+            }
+            .onChange(of: savingRate) { _ in
+                calculateSavings()
+            }
             
-            Text("Hi, \(user.name)")
-                .foregroundColor(.white)
-                .font(.headline)
-            
-            Spacer()
+            // ✅ **Navigation to View3**
+            NavigationLink(
+                destination: View3(),
+                isActive: $navigateToView3
+            ) {
+                EmptyView()
+            }
+            .hidden()
         }
-        .padding(.horizontal)
-        .padding(.top, 50)
     }
 
-    // 🔹 **Background Gradient**
     private func backgroundGradient() -> some View {
         LinearGradient(
             gradient: Gradient(colors: [Color(hex: "1F0179"), Color(hex: "160158"), Color(hex: "0E0137")]),
@@ -96,48 +90,59 @@ struct CalculationPage: View {
         .ignoresSafeArea()
     }
 
-    // 🔹 **Input Field**
+    private func headerView() -> some View {
+        HStack {
+            Image(systemName: "person.circle")
+                .resizable()
+                .frame(width: 35, height: 35)
+                .foregroundColor(.blue)
+
+            Text("Hi, \(user.name)")
+                .foregroundColor(.white)
+                .font(.headline)
+
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.leading, 10)
+        .padding(.bottom, 39)
+    }
+
     private func inputField(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .foregroundColor(.white)
                 .font(.headline)
-            
+                .padding(.leading, 20)
+
             Text(value)
                 .foregroundColor(.white)
                 .padding()
-                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.1)))
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.blue.opacity(0.1))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.blue, lineWidth: 1)
+                )
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
+                .padding(.horizontal, 20)
         }
-        .padding(.vertical, 5)
     }
 
-    // 🔹 **Edit Button**
-    private func editButton() -> some View {
-        Button(action: {
-            navigateToEdit = true
-        }) {
-            Image(systemName: "pencil")
-                .foregroundColor(.white)
-                .padding(10)
-        }
-        .padding(.trailing, 10)
-    }
-
-    // 🔹 **Adjustable Savings Rate Slider**
     private func savingsRateSlider() -> some View {
         VStack {
             Text("Adjust Savings Rate: \(Int(savingRate * 100))%")
                 .foregroundColor(.white)
                 .font(.headline)
-            
+                .padding(.leading, 20)
+
             Slider(value: $savingRate, in: 0.05...0.5, step: 0.05)
-                .padding(.horizontal)
+                .padding(.horizontal, 20)
         }
     }
 
-    // 🔹 **Next Button (Saves Goal and Navigates to View3)**
     private func nextButton() -> some View {
         Button(action: {
             saveGoalAndNavigate()
@@ -149,12 +154,8 @@ struct CalculationPage: View {
                 .background(Color.blue)
                 .cornerRadius(25)
         }
-        .padding(.top, 20)
     }
-    
-    
 
-    // 🔹 **Save Goal and Navigate to View3**
     private func saveGoalAndNavigate() {
         goal.cost = cost
         goal.salary = salary
@@ -164,7 +165,6 @@ struct CalculationPage: View {
             let success = await viewModel.saveGoal(goal: goal)
             DispatchQueue.main.async {
                 if success {
-                    print("✅ Goal confirmed and saved!")
                     navigateToView3 = true
                 } else {
                     print("⚠️ Failed to save goal.")
@@ -173,42 +173,28 @@ struct CalculationPage: View {
         }
     }
 
-    // 🔹 **Calculation Function**
     private func calculateSavings() {
-        guard salary > 0, cost > 0 else {
+        let salaryFromGoal = goal.salary
+
+        guard salaryFromGoal > 0, cost > 0 else {
             savingsPerPeriod = 0
             duration = 0
             return
         }
-        
+
         let savingFactor: Double
         switch savingsType {
-        case .daily:
-            savingFactor = 30.0
-        case .weekly:
-            savingFactor = 4.0
-        case .monthly:
-            savingFactor = 1.0
+        case .daily: savingFactor = 30.0
+        case .weekly: savingFactor = 4.0
+        case .monthly: savingFactor = 1.0
         }
-        
-        let calculatedSavingsPerPeriod = (salary * savingRate) / savingFactor
-        let calculatedDuration = calculatedSavingsPerPeriod > 0 ? Int(ceil(cost / calculatedSavingsPerPeriod)) : 0
-        
-        DispatchQueue.main.async {
-            self.savingsPerPeriod = calculatedSavingsPerPeriod
-            self.duration = max(1, calculatedDuration) // ✅ Ensure at least 1 period
-        }
+
+        let calculated = (salaryFromGoal * savingRate) / savingFactor
+        let durationNeeded = calculated > 0 ? Int(ceil(cost / calculated)) : 0
+
+        savingsPerPeriod = calculated
+        duration = max(1, durationNeeded)
+    
     }
 }
-//#Preview {
-//    CalculationPage(user: User, goal: Goal, cost: Double, salary: Double, savingsType: Goal.SavingsType)
-//}
 
-//
-//NavigationLink(
-//    destination: View3(), // ✅ Navigate to View3
-//    isActive: $navigateToView3
-//) { EmptyView() }
-//.hidden()
-//)
-//}

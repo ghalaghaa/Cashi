@@ -10,15 +10,18 @@ import CloudKit
 
 // MARK: - ViewModel
 class WelcomeGoalsViewModel: ObservableObject {
+    
+   
     @Published var name: String = ""
-    @Published var income: String = ""
+    @Published var salary: String = ""
     @Published var isNameValid: Bool = false
-    @Published var isIncomeValid: Bool = false
+    @Published var isSalaryValid: Bool = false
     @Published var isSaved: Bool = false
     @Published var showiCloudAlert: Bool = false
     @Published var isUsernameTaken: Bool = false
     @Published var usernameValidationMessage: String = ""
-
+//    @StateObject private var viewModel = ViewModel2(user: nil)
+    
     func validateName() {
         isNameValid = !name.isEmpty
         guard isNameValid else {
@@ -37,18 +40,18 @@ class WelcomeGoalsViewModel: ObservableObject {
         }
     }
 
-    func validateIncome() {
-        isIncomeValid = !income.isEmpty
+    func validateSalary() {
+        isSalaryValid = !salary.isEmpty
     }
 
-    func filterIncomeInput(_ newValue: String) {
+    func filterSalaryInput(_ newValue: String) {
         let filtered = newValue.filter { "0123456789".contains($0) }
         if filtered != newValue {
-            income = filtered
+            salary = filtered
         }
-        validateIncome()
+        validateSalary()
     }
-
+    
     // تحقق من حالة iCloud قبل الحفظ
     func checkiCloudStatusAndSave(appleEmail: String) {
         CKContainer.default().accountStatus { status, error in
@@ -90,7 +93,7 @@ class WelcomeGoalsViewModel: ObservableObject {
                 let container = CKContainer(identifier: "iCloud.CashiBackup")
                 let record = CKRecord(recordType: "ADDUsers")
                 record["name"] = self.name
-                record["income"] = self.income
+                record["salary"] = Double(self.salary) ?? 0.0
                 record["email"] = appleEmail
 
                 container.publicCloudDatabase.save(record) { _, error in
@@ -113,6 +116,8 @@ class WelcomeGoalsViewModel: ObservableObject {
 struct GoalsW: View {
     var appleEmail: String
     @StateObject private var viewModel = WelcomeGoalsViewModel()
+   
+
 
     var body: some View {
         NavigationStack {
@@ -166,7 +171,7 @@ struct GoalsW: View {
                     VStack(alignment: .leading) {
                         Text("Income").foregroundColor(.white)
                         HStack {
-                            TextField("Income", text: $viewModel.income)
+                            TextField("Salary", text: $viewModel.salary)
                                 .foregroundColor(.white)
                                 .padding(.leading, 35)
                                 .frame(width: 325, height: 51)
@@ -176,13 +181,13 @@ struct GoalsW: View {
                                     RoundedRectangle(cornerRadius: 5)
                                         .stroke(Color(red: 0.2, green: 0.4, blue: 0.7), lineWidth: 0.7)
                                 )
-                                .onChange(of: viewModel.income) { newValue in
-                                    viewModel.filterIncomeInput(newValue)
+                                .onChange(of: viewModel.salary) { newValue in
+                                    viewModel.filterSalaryInput(newValue)
                                 }
-
-                            if viewModel.isIncomeValid {
+                            
+                            if viewModel.isSalaryValid {
                                 Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
-                            } else if viewModel.income.isEmpty {
+                            } else if viewModel.salary.isEmpty {
                                 Image(systemName: "xmark.circle.fill").foregroundColor(.red)
                             }
                         }.padding(.trailing, 10)

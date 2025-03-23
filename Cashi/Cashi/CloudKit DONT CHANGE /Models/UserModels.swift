@@ -14,19 +14,21 @@ struct User {
     let name: String
     let email: String
     let show: [CKRecord.Reference]?
-    
+    let salary: Double
+
     init?(record: CKRecord) {
         guard let name = record["name"] as? String,
-              let email = record["email"] as? String else {
-            print("⚠️ Missing required fields in User record: \(record)")
+              let email = record["email"] as? String,
+              let salary = record["income"] as? String,
+              let salaryDouble = Double(salary) else {
+            print("⚠️ Missing or invalid fields in User record: \(record)")
             return nil
         }
-        
+
         self.id = record.recordID
         self.name = name
         self.email = email
         self.show = record["show"] as? [CKRecord.Reference]
-        
+        self.salary = salaryDouble
     }
-    
 }
