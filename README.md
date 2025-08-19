@@ -19,16 +19,6 @@
 
 ---
 
-## 🧠 User Insights
-
-![User Insights](images/user-insights.png)
-
-Interviews with potential users revealed that:
-- They want to **track savings visually** to stay motivated.
-- Seeing **friends’ progress** encourages healthy competition.
-- They struggle with consistency and want a **simplified saving experience**.
-
----
 
 ## 🆚 Competitive Analysis
 
@@ -59,31 +49,3 @@ Interviews with potential users revealed that:
 
 ---
 
-## 👥 Contributors
-
-- [@ghalaghaa](https://github.com/ghalaghaa)
-- [@NoufAlfaris](https://github.com/NoufAlfaris)
-- [@yarasharari](https://github.com/yarasharari)
-- [@shahad-24](https://github.com/shahad-24)
-
----
-
-## 📂 File Structure
-
-Make sure the following images are placed inside the `images/` folder:
-
-| File Name                 | Purpose                         |
-|--------------------------|---------------------------------|
-| saving-rate.png          | Saudi savings rate graph        |
-| global-comparison.png    | Comparison with global average  |
-| financial-difficulty.png | Survey on financial struggle    |
-| user-insights.png        | Feedback from users             |
-| competitive-analysis.png | Table comparing apps            |
-| screens-1.png            | Screens 1 & 2 combined          |
-| screens-2.png            | Screens 3, 4 & 5 combined       |
-
----
-
-## 🔒 License
-
-This project is for educational and demonstration purposes only.
